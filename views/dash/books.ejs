@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livros - BiblioTech</title>
+    <link rel="stylesheet" href="/css/dash.css">
+    <link rel="stylesheet" href="/css/table.css">
+    <link rel="stylesheet" href="/css/modal.css">
+    <link rel="stylesheet" href="/css/toast.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="dashboard">
+        <div class="toast-container"></div>
+        <main class="main-content">
+            <div class="top-bar">
+                <button class="menu-toggle" id="menu-toggle" aria-label="menu">
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+            <%- include('partials/menu.ejs') %>
+            <div class="page-header">
+                <div class="page-header-content">
+                    <div>
+                        <h1 class="page-title">Gerenciamento de Livros</h1>
+                        <p class="page-subtitle">Gerencie o acervo da biblioteca</p>
+                    </div>
+                    <button class="add-button btn-md" data-bs-toggle="modal" data-bs-target="#addBookModal">
+                        <i class="ri-add-line"></i>
+                        Adicionar
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-controls">
+                <input type="text" id="searchInput" placeholder="Procurar...">
+                <select id="itemsPerPage">
+                    <option value="5">5 por página</option>
+                    <option value="10">10 por página</option>
+                    <option value="20">20 por página</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table id="booksTable" class="table">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Autor</th>
+                            <th>Categoria</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if(books.length === 0) { %>
+                            <tr>
+                                <td colspan="6">
+                                    <div class="no-data">
+                                        <i class="ri-inbox-archive-line"></i>
+                                        <p>Nenhum registro encontrado</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        <% }else{ %>
+                        <% books.forEach(book=> { %>
+                            <tr data-book-id="<%= book._id %>">
+                                <td data-field="title">
+                                    <%= book.title %>
+                                </td>
+                                <td data-field="autor">
+                                    <%= book.autor %>
+                                </td>
+                                <td data-field="category">
+                                    <%= book.category %>
+                                </td>
+                                <td data-field="status">
+                                    <span class="status-badge <%= book.status === 0 ? 'available' : 'borrowed' %>">
+                                        <%= book.status === 0 ? 'Disponível' : 'Emprestado' %>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="action-button edit-book" data-bs-toggle="modal"
+                                            data-bs-target="#editBookModal" data-book-title="<%= book.title %>"
+                                            data-book-autor="<%= book.autor %>"
+                                            data-book-category="<%= book.category %>"
+                                            data-book-id="<%= book._id %>">
+                                            <i class="ri-edit-line"></i>
+                                        </button>
+                                        <button class="action-button delete delete-book" data-bs-toggle="modal"
+                                            data-bs-target="#deleteBookModal" data-book-id="<%= book._id %>">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <% })} %>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination"></div>
+        </main>
+        <%- include('partials/modal_book_add.ejs') -%>
+            <%- include('partials/modal_book_edit.ejs') -%>
+                <%- include('partials/modal_book_delete.ejs') -%>
+    </div>
+
+    <script src="/../../js/menu.js"></script>
+    <script src="/../../js/table.js"></script>
+    <script>
+        $(document).ready(function () {
+            const booksTable = new TableManager('booksTable', {
+                endpoint: '/api/books/page',
+                itemsPerPage: 5,
+                columns: [
+                    { field: 'title', title: 'Título' },
+                    { field: 'autor', title: 'Autor' },
+                    { field: 'category', title: 'Categoria' },
+                    { 
+                        field: 'status', 
+                        title: 'Status'
+                    }
+                ],
+                actionButtons: (row) => `
+                    <button class="action-button edit-book" data-bs-toggle="modal"
+                        data-bs-target="#editBookModal" 
+                        data-book-id="${row._id}"
+                        data-book-title="${row.title}"
+                        data-book-autor="${row.autor}"
+                        data-book-category="${row.category}"
+                        data-book-status="${row.status}">
+                        <i class="ri-edit-line"></i>
+                    </button>
+                    <button class="action-button delete delete-book" data-bs-toggle="modal"
+                        data-bs-target="#deleteBookModal" 
+                        data-book-id="${row._id}">
+                        <i class="ri-delete-bin-line"></i>
+                    </button>
+                `
+            });
+        });
+
+        // Funções para manipulação de modais
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.setProperty('display', 'none');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Configurar listeners para os botões de modal
+            document.querySelectorAll('[data-bs-toggle="modal"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const modalId = this.getAttribute('data-bs-target').substring(1);
+                    
+                    if (this.classList.contains('edit-book')) {
+                        // Pegar os dados da linha da tabela
+                        const row = this.closest('tr');
+                        const bookId = row.dataset.bookId;
+                        const title = row.querySelector('[data-field="title"]').textContent.trim();
+                        const autor = row.querySelector('[data-field="autor"]').textContent.trim();
+                        const category = row.querySelector('[data-field="category"]').textContent.trim();
+
+                        // Preencher o formulário
+                        document.getElementById('editBookId').value = bookId;
+                        document.getElementById('editTitle').value = title;
+                        document.getElementById('editAutor').value = autor;
+                        document.getElementById('editCategory').value = category;
+                    }
+
+                    if (this.classList.contains('delete-book')) {
+                        // Pegar os dados da linha da tabela
+                        const row = this.closest('tr');
+                        const bookId = row.dataset.bookId;
+
+                        // Preencher o formulário
+                        document.getElementById('deleteBookId').value = bookId;
+                    }
+                    
+                    openModal(modalId);
+                });
+            });
+
+            // Configurar botões de fechar modal
+            document.querySelectorAll('.close-modal, .btn-secondary').forEach(button => {
+                button.addEventListener('click', function() {
+                    const modal = this.closest('.modal');
+                    closeModal(modal.id);
+                });
+            });
+        });
+    </script>
+    <script src="../js/toast.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard da Biblioteca</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/dash.css">
+    <style>
+        .user-dropdown {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 8px 0;
+        }
+
+        .user-dropdown.open {
+            display: block;
+        }
+        
+        .user-info {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        
+        <main class="main-content">
+            <div class="top-bar">
+                <button class="menu-toggle" id="menu-toggle" aria-label="menu">
+                    <div class="hamburger">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </button>
+            </div>
+            <%- include('partials/menu.ejs') -%>
+            <div class="recent-activities">
+                <h2 class="activities-title">Atividades Recentes</h2>
+                
+                <div class="table-controls">
+                    <input type="text" id="searchInput" placeholder="Pesquisar atividades...">
+                    <div class="controls-right">
+                        <select id="itemsPerPage" class="control-select">
+                            <option value="10">10 por página</option>
+                            <option value="25">25 por página</option>
+                            <option value="50">50 por página</option>
+                        </select>
+                    </div>
+                </div>
+
+                <ul class="activity-list">
+                    <% activities.forEach(activity => { %>
+                        <li class="activity-item">
+                            <div class="activity-icon">
+                                <% if (activity.action_target === 'user' && activity.action_type === "create") { %>
+                                    <i class="ri-user-add-line"></i>
+                                <% } else if (activity.action_target === 'user' && activity.action_type === "update") { %>
+                                    <i class="ri-user-settings-line"></i>
+                                <% } else if (activity.action_target === 'user' && activity.action_type === "delete") { %>
+                                    <i class="ri-user-minus-line"></i>
+                                <% } else if (activity.action_target === 'book' && activity.action_type === "create") { %>
+                                    <i class="ri-book-3-line"></i>
+                                <% } else if (activity.action_target === 'book' && activity.action_type === "update") { %>
+                                    <i class="ri-book-3-line"></i>
+                                <% } else if (activity.action_target === 'book' && activity.action_type === "delete") { %>
+                                    <i class="ri-book-3-line"></i>
+                                <% } else if (activity.action_target === 'lending' && activity.action_type === "create") { %>
+                                    <i class="ri-arrow-go-forward-fill"></i>
+                                <% } else if (activity.action_target === 'lending' && activity.action_type === "delete") {%>
+                                    <i class="ri-arrow-go-back-line"></i>
+                                <% } %>
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title"><%= activity.action %></div>
+                                <div class="activity-time"><%= new Date(activity.action_date).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' }) %></div>
+                            </div>
+                        </li>
+                    <% }) %>
+                </ul>
+                <div id="pagination" class="pagination"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let searchTimeout;
+
+        async function loadActivities(page = 1, search = '', limit = 10) {
+            try {
+                const response = await fetch(`/api/actions/page?page=${page}&limit=${limit}&search=${search}`);
+                const data = await response.json();
+                
+                const activityList = document.querySelector('.activity-list');
+                activityList.innerHTML = '';
+                
+                data.rows.forEach(activity => {
+                    const date = new Date(activity.action_date).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+                    activityList.innerHTML += `
+                        <li class="activity-item">
+                            <div class="activity-icon">
+                                ${getActivityIcon(activity.action_target, activity.action_type)}
+                            </div>
+                            <div class="activity-details">
+                                <div class="activity-title">${activity.action}</div>
+                                <div class="activity-time">${date}</div>
+                            </div>
+                        </li>
+                    `;
+                });
+
+                currentPage = data.currentPage;
+                totalPages = data.totalPages;
+                updatePagination();
+            } catch (error) {
+                console.error('Erro ao carregar atividades:', error);
+            }
+        }
+
+        function getActivityIcon(target, type) {
+            // Mapeamento de ícones conforme o tipo e alvo da ação
+            const icons = {
+                user: {
+                    create: '<i class="ri-user-add-line"></i>',
+                    update: '<i class="ri-user-settings-line"></i>',
+                    delete: '<i class="ri-user-minus-line"></i>'
+                },
+                book: {
+                    create: '<i class="ri-book-3-line"></i>',
+                    update: '<i class="ri-book-3-line"></i>',
+                    delete: '<i class="ri-book-3-line"></i>'
+                },
+                lending: {
+                    create: '<i class="ri-arrow-go-forward-fill"></i>',
+                    delete: '<i class="ri-arrow-go-back-line"></i>'
+                }
+            };
+            return icons[target]?.[type] || '<i class="ri-question-line"></i>';
+        }
+
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            let html = '';
+
+            // Container para info de paginação e controles
+            html += '<div class="pagination">';
+            
+            // Informações da página
+            html += `<div class="pagination-info">
+                Página ${currentPage} de ${totalPages}
+            </div>`;
+            
+            // Controles de paginação
+            html += '<div class="pagination-controls">';
+            
+            // Primeiro e Anterior
+            html += `
+                <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="loadActivities(1)">
+                    <i class="ri-skip-back-line"></i>
+                </button>
+                <button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="loadActivities(${currentPage - 1})">
+                    <i class="ri-arrow-left-s-line"></i>
+                </button>
+            `;
+            
+            // Números das páginas
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (startPage > 1) {
+                html += '<span class="page-dots">...</span>';
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                html += `
+                    <button class="page-btn ${i === currentPage ? 'active' : ''}" 
+                            onclick="loadActivities(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+            
+            if (endPage < totalPages) {
+                html += '<span class="page-dots">...</span>';
+            }
+            
+            // Próximo e Último
+            html += `
+                <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="loadActivities(${currentPage + 1})">
+                    <i class="ri-arrow-right-s-line"></i>
+                </button>
+                <button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="loadActivities(${totalPages})">
+                    <i class="ri-skip-forward-line"></i>
+                </button>
+            `;
+            
+            html += '</div></div>';
+            
+            pagination.innerHTML = html;
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadActivities(1, e.target.value);
+            }, 300);
+        });
+
+        document.getElementById('itemsPerPage').addEventListener('change', (e) => {
+            loadActivities(1, document.getElementById('searchInput').value, e.target.value);
+        });
+
+        // Carregar atividades iniciais
+        loadActivities();
+    </script>
+</body>
+</html>

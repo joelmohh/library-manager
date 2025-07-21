@@ -1,0 +1,35 @@
+<div class="modal fade" id="deleteBookModal" tabindex="-1" aria-labelledby="deleteBookModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteBookModalLabel">Confirmar Exclusão</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+            <form id="deleteBookForm">
+                <div class="modal-body">
+                    <input type="hidden" id="deleteBookId" name="id">
+                    <p>Tem certeza que deseja excluir este livro?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="ri-close-line"></i>
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-danger" onclick="deleteBook()">
+                        <i class="ri-delete-bin-line"></i>
+                        Excluir
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteBookForm = document.getElementById('deleteBookForm');
+    deleteBookForm.addEventListener('submit', async function(e) { e.preventDefault();});
+});
+</script>

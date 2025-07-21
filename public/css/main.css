@@ -1,0 +1,131 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Variáveis globais */
+:root {
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --danger: #ef4444;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-500: #6b7280;
+    --gray-700: #374151;
+    --gray-900: #111827;
+    --radius: 0.5rem;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos base */
+body {
+    font-family: 'Inter', sans-serif;
+    background: #f0f4f8;
+    color: var(--gray-900);
+    line-height: 1.5;
+}
+
+/* Layout e containers */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+/* Componentes reutilizáveis */
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--primary-hover);
+}
+
+/* Tabelas otimizadas */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    padding: 0.75rem;
+    text-align: left;
+}
+
+/* Forms otimizados */
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+}
+
+/* Cards simplificados */
+.card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem;
+}
+
+/* Modal otimizado */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    z-index: 1000;
+}
+
+.modal.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: #fff;
+    border-radius: var(--radius);
+    max-width: 500px;
+    width: 90%;
+}
+
+/* Utilitários comuns */
+.flex {
+    display: flex;
+}
+
+.grid {
+    display: grid;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Media Queries essenciais */
+@media (max-width: 768px) {
+    .mobile-hidden {
+        display: none;
+    }
+    
+    .mobile-full {
+        width: 100%;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr;
+    }
+}
