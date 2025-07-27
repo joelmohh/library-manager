@@ -1,5 +1,5 @@
 const express = require('express');
-const session = require('express-session');
+const session = require('cookie-session');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
@@ -28,17 +28,11 @@ app.use(session({
 }));
 
 // Conexão com MongoDB
-const mongoose = require('mongoose');
-mongoose.connect(process.env.DB_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
+mongoose.connect(process.env.DB_URL)
 .then(() => {
-    logAction('DATABASE_CONNECTED', { url: process.env.DB_URL });
     console.log('✅ DATABASE CONECTADA');
 })
 .catch((error) => {
-    logAction('DATABASE_CONNECTION_ERROR', { error: error.message });
     console.error('❌ Erro ao conectar com o banco:', error);
     process.exit(1);
 });
