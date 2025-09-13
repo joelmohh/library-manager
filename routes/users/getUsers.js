@@ -1,8 +1,24 @@
+
 const Router = require('express').Router();
 
 const User = require('../../models/User');
 const { adminOnly } = require('../../modules/verify');
-
+// Contagem total de usuários
+Router.get('/count', adminOnly, async (req, res) => {
+    try {
+        const type = req.query.type;
+        let total;
+        if (type) {
+            total = await User.countDocuments({ type });
+        } else {
+            total = await User.countDocuments();
+        }
+        res.status(200).json({ total });
+    } catch (error) {
+        console.error('Erro ao contar usuários:', error.message);
+        res.status(500).json({ message: 'Não foi possível contar os usuários.' });
+    }
+});
 Router.get('/:page/:limit', adminOnly, async (req, res) => {
     const { page, limit } = req.params;
 

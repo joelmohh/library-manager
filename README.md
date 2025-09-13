@@ -1,3 +1,6 @@
+### Ações / Logs (`/api/actions`)
+
+- `GET /` — Lista as últimas 100 ações do sistema (admin)
 # Library Manager System
 
 School library management system developed in Node.js with Express and MongoDB.
@@ -44,10 +47,60 @@ School library management system developed in Node.js with Express and MongoDB.
    npm start    # production
    ```
 
-## Available Scripts
 
-- `npm start` - Production server
-- `npm run dev` - Development with nodemon
+## Rotas da API
+
+Todas as rotas estão sob o prefixo `/api/`.
+
+### Autenticação (`/api/auth`)
+
+- `POST /login` — Realiza login do usuário
+- `POST /register` — Cria novo usuário (admin)
+- `POST /exit` — Logout
+- `POST /reset-password` — Troca de senha
+
+### Livros (`/api/books`)
+
+- `GET /` — Lista todos os livros
+- `GET /search?title=...` — Busca livros por título
+- `GET /:page/:limit` — Paginação de livros
+
+#### Gerenciamento de Livros (`/api/books`)
+- `POST /add` — Adiciona livro (admin)
+- `POST /remove/:id` — Remove livro (admin)
+- `POST /update/:id` — Atualiza livro (admin)
+
+### Empréstimos (`/api/lending`)
+
+- `POST /add` — Cria empréstimo (admin)
+- `POST /remove/:id` — Devolve empréstimo (admin)
+- `POST /extend/:id` — Estende empréstimo (admin)
+
+#### Consulta de Empréstimos (`/api/lending`)
+- `GET /:page/:limit` — Lista empréstimos paginados (admin)
+- `GET /search?query=...` — Busca empréstimos (admin)
+- `GET /user/:userId` — Lista todos os livros emprestados de um usuário específico (admin)
+- `GET /my-history` — Retorna o histórico de empréstimos do usuário logado (aluno/professor)
+
+### Usuários (`/api/users`)
+
+- `GET /:page/:limit` — Lista usuários paginados (admin)
+- `GET /search?query=...` — Busca usuários (admin)
+- `GET /:id` — Busca usuário por ID (admin)
+
+#### Gerenciamento de Usuários (`/api/users`)
+- `POST /add` — Adiciona usuário (admin)
+- `POST /remove/:id` — Remove usuário (admin)
+- `POST /update/:id` — Atualiza usuário (admin)
+
+### Status (`/api/status`)
+
+- `GET /ping` — Verifica status da API
+
+## Scripts Disponíveis
+
+- `npm start` — Servidor em produção
+- `npm run dev` — Desenvolvimento com nodemon
 
 ## API Routes Documentation
 
