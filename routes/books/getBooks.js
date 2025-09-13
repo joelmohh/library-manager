@@ -8,8 +8,8 @@ router.get('/', async (req, res) => {
         const books = await Book.find();
         res.status(200).json(books);
     } catch (error) {
-        console.error('Erro ao buscar livros:', error);
-        res.status(500).json({ message: 'Erro ao buscar livros' });
+    console.error('Erro ao buscar livros:', error.message);
+    res.status(500).json({ message: 'Não foi possível buscar os livros.' });
     }
 });
 
@@ -19,8 +19,8 @@ router.get('/search', async (req, res) => {
         const books = await Book.find({ title: new RegExp(query, 'i') });
         res.status(200).json(books);
     } catch (error) {
-        console.error('Erro ao buscar livros por título:', error);
-        res.status(500).json({ message: 'Erro ao buscar livros por título' });
+    console.error('Erro ao buscar livros por título:', error.message);
+    res.status(500).json({ message: 'Não foi possível buscar livros por título.' });
     }
 });
 
@@ -32,8 +32,8 @@ router.get('/:page/:limit', async (req, res) => {
             .limit(limit);
         res.status(200).json(books);
     } catch (error) {
-        console.error('Erro ao buscar livros por página:', error);
-        res.status(500).json({ message: 'Erro ao buscar livros por página' });
+    console.error('Erro ao buscar livros por página:', error.message);
+    res.status(500).json({ message: 'Não foi possível buscar livros por página.' });
     }
 });
 

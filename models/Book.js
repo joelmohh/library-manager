@@ -18,11 +18,11 @@ const bookSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    disponibility: {
+    available: {
         type: Boolean,
         default: true
     }
 })
 
-const Book = mongoose.model('Book', bookSchema);
+const Book = mongoose.models.Book || mongoose.model('Book', bookSchema);
 module.exports = Book;

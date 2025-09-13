@@ -5,9 +5,12 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 const mongoose = require('mongoose');
+const { isLoggedIn } = require('./modules/verify');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+
 
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
@@ -27,13 +30,14 @@ app.use(session({
     }
 }));
 
+
 // Conexão com MongoDB
 mongoose.connect(process.env.DB_URL)
 .then(() => {
-    console.log('✅ DATABASE CONECTADA');
+    console.log('DATABASE CONECTADA');
 })
 .catch((error) => {
-    console.error('❌ Erro ao conectar com o banco:', error);
+    console.error('Erro ao conectar com o banco:', error);
     process.exit(1);
 });
 
@@ -80,7 +84,7 @@ function loadRoutes(routesDir) {
                             router.use(routeModule.router);
                         }
                         
-                        console.log(`✅ Arquivo carregado: ${routeName}/${file}`);
+                        console.log(`Arquivo carregado: ${routeName}/${file}`);
                     } catch (error) {
                         console.error(`❌ Erro ao carregar ${routeName}/${file}:`, error.message);
                     }
@@ -89,7 +93,7 @@ function loadRoutes(routesDir) {
             
             // Registra a rota principal
             app.use(`/api/${routeName}`, router);
-            console.log(`🚀 Rota registrada: /api/${routeName}`);
+            console.log(`Rota registrada: /api/${routeName}`);
             
         } else if (path.extname(item) === '.js') {
             // É um arquivo .js diretamente na pasta routes
@@ -98,7 +102,7 @@ function loadRoutes(routesDir) {
             
             try {
                 app.use(`/api/${routeName}`, require(routePath));
-                console.log(`✅ Rota carregada: /api/${routeName}`);
+                console.log(`Rota carregada: /api/${routeName}`);
             } catch (error) {
                 console.error(`❌ Erro ao carregar rota ${routeName}:`, error.message);
             }
@@ -108,9 +112,26 @@ function loadRoutes(routesDir) {
 
 loadRoutes(routesPath);
 
+app.get('/', (req, res) => {
+    //pega os 10 primeiros livros da tabela
+    
+
+    
+    res.render('index', { page: { title: 'Home' }});
+})
+
+app.get('/login', isLoggedIn, (req, res) => {
+    res.render('login', { page: { title: 'Login' } });
+});
+
+//Student Routes
+app.get('/student', (req, res) => {
+    res.render('student_dashboard', { user: req.session.username });
+});
+
 
 
 
 app.listen(PORT, () => {
-    console.log(`✅ Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });

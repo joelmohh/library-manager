@@ -26,5 +26,5 @@ const LendingSchema = new mongoose.Schema({
     }
 });
 
-const Lending = mongoose.model('Lending', LendingSchema);
+const Lending = mongoose.models.Lending || mongoose.model('Lending', LendingSchema);
 module.exports = Lending;

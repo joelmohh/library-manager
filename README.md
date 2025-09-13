@@ -1,19 +1,19 @@
-# 📚 Library Manager System
+# Library Manager System
 
 School library management system developed in Node.js with Express and MongoDB.
 
-## 🚀 Features
+## Features
 
-- ✅ **Secure authentication** with password hashing
-- 📖 **Book management** (complete CRUD)
-- 👥 **User management** (students, teachers, admins)
-- 📋 **Lending system** with date control
-- 📊 **Administrative dashboard** with metrics
-- 🔍 **Optimized search and pagination**
-- 📝 **Action logging** for audit trail
-- 🔒 **Enhanced security** with rate limiting and sanitization
+- **Secure authentication** with password hashing
+- **Book management** (complete CRUD)
+- **User management** (students, teachers, admins)
+- **Lending system** with date control
+- **Administrative dashboard** with metrics
+- **Optimized search and pagination**
+- **Action logging** for audit trail
+- **Enhanced security** with rate limiting and sanitization
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 - **Backend:** Node.js, Express.js
 - **Database:** MongoDB with Mongoose
@@ -22,7 +22,7 @@ School library management system developed in Node.js with Express and MongoDB.
 - **Security:** Helmet, express-rate-limit, express-mongo-sanitize
 - **Validation:** express-validator
 
-## 📦 Installation
+## Installation
 
 1. **Install dependencies:**
    ```bash
@@ -44,14 +44,14 @@ School library management system developed in Node.js with Express and MongoDB.
    npm start    # production
    ```
 
-## 🔧 Available Scripts
+## Available Scripts
 
 - `npm start` - Production server
 - `npm run dev` - Development with nodemon
 
-## 🛣️ API Routes Documentation
+## API Routes Documentation
 
-### 📖 Books Routes (`/api/books`)
+### Books Routes (`/api/books`)
 
 #### POST Routes
 - `POST /api/books/add` - Adicionar novo livro
@@ -79,7 +79,7 @@ School library management system developed in Node.js with Express and MongoDB.
   - **Params:** `page` (número da página), `limit` (limite por página)
   - **Response:** `200` - Array de livros paginados
 
-### 👥 Users Routes (`/api/users`)
+### Users Routes (`/api/users`)
 
 #### POST Routes
 - `POST /api/users/add` - Adicionar novo usuário
@@ -108,7 +108,7 @@ School library management system developed in Node.js with Express and MongoDB.
   - **Params:** `id` (ID do usuário)
   - **Response:** `200` - Dados do usuário | `404` - Usuário não encontrado
 
-### 📋 Lending Routes (`/api/lending`)
+### Lending Routes (`/api/lending`)
 
 #### POST Routes
 - `POST /api/lending/add` - Criar novo empréstimo
@@ -133,12 +133,12 @@ School library management system developed in Node.js with Express and MongoDB.
   - **Query:** `query` (termo de busca para livro ou usuário)
   - **Response:** `200` - Array de empréstimos encontrados
 
-### 🏠 Main Routes
+### Main Routes
 
 - `GET /` - Página inicial do sistema
   - **Response:** Renderiza a view `index.ejs`
 
-## 📝 Response Formats
+## Response Formats
 
 ### Success Responses
 ```json
@@ -163,4 +163,4 @@ School library management system developed in Node.js with Express and MongoDB.
 
 ---
 
-**🎉 System is now robust, secure, and production-ready!**
+**System is now robust, secure, and production-ready!**

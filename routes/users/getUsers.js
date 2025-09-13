@@ -1,8 +1,9 @@
 const Router = require('express').Router();
 
 const User = require('../../models/User');
+const { adminOnly } = require('../../modules/verify');
 
-Router.get('/:page/:limit', async (req, res) => {
+Router.get('/:page/:limit', adminOnly, async (req, res) => {
     const { page, limit } = req.params;
 
     try {
@@ -19,12 +20,12 @@ Router.get('/:page/:limit', async (req, res) => {
             lastPage: Math.ceil(total / limit)
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+    console.error('Erro ao buscar usuários:', error.message);
+    res.status(500).json({ message: 'Não foi possível buscar os usuários.' });
     }
 });
 
-Router.get('/search', async (req, res) => {
+Router.get('/search', adminOnly,  async (req, res) => {
     const { query } = req.query;
 
     try {
@@ -37,12 +38,12 @@ Router.get('/search', async (req, res) => {
 
         res.json(users);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+    console.error('Erro ao buscar usuários:', error.message);
+    res.status(500).json({ message: 'Não foi possível buscar os usuários.' });
     }
 });
 
-Router.get('/:id', async (req, res) => {
+Router.get('/:id', adminOnly, async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -52,8 +53,8 @@ Router.get('/:id', async (req, res) => {
         }
         res.json(user);
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+    console.error('Erro ao buscar usuário por ID:', error.message);
+    res.status(500).json({ message: 'Não foi possível buscar o usuário.' });
     }
 });
 

@@ -1,8 +1,10 @@
 const Router = require('express').Router();
 
 const User = require('../../models/User');
+const Actions = require('../../models/Actions');
+const { adminOnly } = require('../../modules/verify');
 
-Router.post('/add', async (req, res) => {
+Router.post('/add', adminOnly, async (req, res) => {
     const { username, fullName, email, password, type } = req.body;
 
     try {
@@ -15,24 +17,36 @@ Router.post('/add', async (req, res) => {
         });
         await user.save();
         res.status(201).json(user);
+        const actionLog = new Actions({
+            description: `Usuário adicionado: ${username}`,
+            author: req.session.username,
+            action: 'added'
+        });
+        await actionLog.save();
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+    console.error('Erro ao adicionar usuário:', error.message);
+    res.status(500).json({ message: 'Não foi possível adicionar o usuário.' });
     }
 });
-Router.post('/remove/:id', async (req, res) => {
+Router.post('/remove/:id', adminOnly, async (req, res) => {
     const { id } = req.params;
 
     try {
         await User.findByIdAndDelete(id);
         res.status(200).json({ message: 'User removed successfully' });
+        const actionLog = new Actions({
+            description: `Usuário removido: ID ${id}`,
+            author: req.session.username,
+            action: 'removed'
+        });
+        await actionLog.save(); 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+    console.error('Erro ao remover usuário:', error.message);
+    res.status(500).json({ message: 'Não foi possível remover o usuário.' });
     }
 });
 
-Router.post('/update/:id', async (req, res) => {
+Router.post('/update/:id', adminOnly, async (req, res) => {
     const { id } = req.params;
     const { username, fullName, email, password, type } = req.body;
 
@@ -45,9 +59,15 @@ Router.post('/update/:id', async (req, res) => {
             type
         }, { new: true });
         res.status(200).json(updatedUser);
+        const actionLog = new Actions({
+            description: `Usuário atualizado: ${username} (ID: ${id})`,
+            author: req.session.username,
+            action: 'updated'
+        });
+        await actionLog.save();
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+    console.error('Erro ao atualizar usuário:', error.message);
+    res.status(500).json({ message: 'Não foi possível atualizar o usuário.' });
     }
 });
 
