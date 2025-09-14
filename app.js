@@ -5,7 +5,7 @@ const fs = require("fs")
 const path = require("path")
 require("dotenv").config({ debug: false })
 const mongoose = require("mongoose")
-const { isLoggedIn } = require("./modules/verify")
+const { isLoggedIn, loginRedirect } = require("./modules/verify")
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -116,7 +116,7 @@ app.get("/", (req, res) => {
   res.render("index", { page: { title: "Home" } })
 })
 
-app.get("/login", isLoggedIn, (req, res) => {
+app.get("/login", loginRedirect, (req, res) => {
   res.render("login", { page: { title: "Login" } })
 })
 
