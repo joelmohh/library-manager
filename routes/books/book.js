@@ -1,11 +1,38 @@
 const express = require('express');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 
 const Book = require('../../models/Book');
 const Actions = require('../../models/Actions');
 const { adminOnly } = require('../../modules/verify');
 
-router.post('/add', adminOnly, async (req, res) => {
+router.post('/add', [
+    body('title')
+        .trim()
+        .isLength({ min: 1, max: 200 })
+        .withMessage('Título deve ter entre 1 e 200 caracteres'),
+    body('author')
+        .trim()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Autor deve ter entre 1 e 100 caracteres'),
+    body('editor')
+        .trim()
+        .isLength({ min: 1, max: 100 })
+        .withMessage('Editora deve ter entre 1 e 100 caracteres'),
+    body('isbn')
+        .trim()
+        .matches(/^(?:ISBN(?:-1[03])?:? )?(?=[0-9X]{10}$|(?=(?:[0-9]+[- ]){3})[- 0-9X]{13}$|97[89][0-9]{10}$|(?=(?:[0-9]+[- ]){4})[- 0-9]{17}$)(?:97[89][- ]?)?[0-9]{1,5}[- ]?[0-9]+[- ]?[0-9]+[- ]?[0-9X]$/)
+        .withMessage('ISBN inválido')
+], adminOnly, async (req, res) => {
+    // Verificar erros de validação
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+            message: 'Dados inválidos',
+            errors: errors.array()
+        });
+    }
+
     const { title, author, editor, isbn } = req.body;
 
     try {

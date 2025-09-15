@@ -7,7 +7,12 @@ function isLoggedIn(req, res, next) {
 }
 function loginRedirect(req, res, next) {
     if (req.session && req.session.userId) {
-        return res.redirect('/dashboard');
+        // Redireciona baseado no tipo de usuário
+        if (req.session.type === 'admin') {
+            return res.redirect('/admin');
+        } else {
+            return res.redirect('/student');
+        }
     } else {
         return next();
     }

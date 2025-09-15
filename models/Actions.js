@@ -14,7 +14,7 @@ const actionSchema = new mongoose.Schema({
         required: true,
         enum: ['added', 'removed', 'updated']
     },
-    Date: {
+    date: {
         type: Date,
         default: Date.now
     }

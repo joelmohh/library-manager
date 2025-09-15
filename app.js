@@ -3,12 +3,68 @@ const session = require("cookie-session")
 const bodyParser = require("body-parser")
 const fs = require("fs")
 const path = require("path")
+const helmet = require("helmet")
+const rateLimit = require("express-rate-limit")
+// const mongoSanitize = require("express-mongo-sanitize") // Removido temporariamente
 require("dotenv").config({ debug: false })
 const mongoose = require("mongoose")
 const { isLoggedIn, loginRedirect } = require("./modules/verify")
 
 const app = express()
 const PORT = process.env.PORT || 3000
+
+// Middlewares de segurança
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+      imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
+      connectSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"]
+    }
+  }
+}))
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 100, // máximo 100 requests por IP
+  message: { error: "Muitas tentativas. Tente novamente em 15 minutos." }
+})
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo 5 tentativas de login por IP
+  message: { error: "Muitas tentativas de login. Tente novamente em 15 minutos." }
+})
+
+app.use(limiter)
+app.use("/api/auth", authLimiter)
+
+// Sanitização customizada contra NoSQL injection
+app.use((req, res, next) => {
+  const sanitize = (obj) => {
+    if (obj && typeof obj === 'object') {
+      for (let key in obj) {
+        if (typeof obj[key] === 'string') {
+          // Remove caracteres perigosos para NoSQL injection
+          obj[key] = obj[key].replace(/[\$\{\}]/g, '');
+        } else if (typeof obj[key] === 'object') {
+          sanitize(obj[key]);
+        }
+      }
+    }
+    return obj;
+  };
+  
+  if (req.body) req.body = sanitize(req.body);
+  if (req.query) req.query = sanitize(req.query);
+  if (req.params) req.params = sanitize(req.params);
+  
+  next();
+})
 
 app.use(bodyParser.json({ limit: "10mb" }))
 app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }))
@@ -47,9 +103,6 @@ mongoose
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
 
-app.get("/", (req, res) => {
-  res.render("index")
-})
 
 // Carregamento automático de rotas
 const routesPath = path.join(__dirname, "routes")
@@ -111,8 +164,6 @@ loadRoutes(routesPath)
 console.log('ROTAS CARREGADAS')
 
 app.get("/", (req, res) => {
-  //pega os 10 primeiros livros da tabela
-
   res.render("index", { page: { title: "Home" } })
 })
 
@@ -145,6 +196,35 @@ app.get("/admin/lending", (req, res) => {
 app.get("/admin/audit", (req, res) => {
   res.render("admin_audit", { user: req.session.username, page: { title: "Auditoria" } })
 })
+
+// Middleware de tratamento de erros global
+app.use((err, req, res, next) => {
+  console.error('Erro:', err);
+  
+  // Log do erro para debug
+  if (process.env.NODE_ENV === 'development') {
+    console.error(err.stack);
+  }
+  
+  // Resposta de erro genérica
+  const statusCode = err.statusCode || 500;
+  const message = process.env.NODE_ENV === 'production' 
+    ? 'Erro interno do servidor' 
+    : err.message;
+    
+  res.status(statusCode).json({
+    error: true,
+    message: message
+  });
+});
+
+// Middleware para rotas não encontradas
+app.use((req, res) => {
+  res.status(404).json({
+    error: true,
+    message: 'Rota não encontrada'
+  });
+});
 
 app.listen(PORT, () => {
   console.log('SERVIDOR INICIADO')

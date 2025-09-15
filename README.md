@@ -1,219 +1,221 @@
-### Ações / Logs (`/api/actions`)
-
-- `GET /` — Lista as últimas 100 ações do sistema (admin)
 # Library Manager System
 
-School library management system developed in Node.js with Express and MongoDB.
+Sistema de gerenciamento de biblioteca escolar desenvolvido em Node.js com Express e MongoDB.
 
-## Features
+## ✨ Funcionalidades
 
-- **Secure authentication** with password hashing
-- **Book management** (complete CRUD)
-- **User management** (students, teachers, admins)
-- **Lending system** with date control
-- **Administrative dashboard** with metrics
-- **Optimized search and pagination**
-- **Action logging** for audit trail
-- **Enhanced security** with rate limiting and sanitization
+- **Autenticação segura** com hash de senhas
+- **Gerenciamento de livros** (CRUD completo)
+- **Gerenciamento de usuários** (estudantes, professores, administradores)
+- **Sistema de empréstimos** com controle de datas
+- **Dashboard administrativo** com métricas
+- **Busca otimizada e paginação**
+- **Log de ações** para auditoria
+- **Segurança aprimorada** com rate limiting e sanitização
 
-## Technologies Used
+## 🛠️ Tecnologias Utilizadas
 
 - **Backend:** Node.js, Express.js
-- **Database:** MongoDB with Mongoose
+- **Banco de Dados:** MongoDB com Mongoose
 - **Template Engine:** EJS
-- **Authentication:** bcrypt, express-session
-- **Security:** Helmet, express-rate-limit, express-mongo-sanitize
-- **Validation:** express-validator
+- **Autenticação:** bcrypt, cookie-session
+- **Segurança:** Helmet, express-rate-limit, express-mongo-sanitize
+- **Validação:** express-validator
 
-## Installation
+## 🚀 Instalação e Configuração
 
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+### 1. Pré-requisitos
+- Node.js (versão 14 ou superior)
+- MongoDB (local ou Atlas)
+- Git
 
-2. **Configure environment variables:**
-   Create a `.env` file in the project root:
-   ```env
-   DB_URL=mongodb://localhost:27017/library-manager
-   SESSION_SECRET=your_very_secure_secret_here
-   PORT=3000
-   NODE_ENV=development
-   ```
+### 2. Instalação
+```bash
+# Clone o repositório
+git clone https://github.com/joelmohh/library-manager.git
 
-3. **Run the project:**
-   ```bash
-   npm run dev  # development
-   npm start    # production
-   ```
+# Entre no diretório
+cd library-manager
 
-
-## Rotas da API
-
-Todas as rotas estão sob o prefixo `/api/`.
-
-### Autenticação (`/api/auth`)
-
-- `POST /login` — Realiza login do usuário
-- `POST /register` — Cria novo usuário (admin)
-- `POST /exit` — Logout
-- `POST /reset-password` — Troca de senha
-
-### Livros (`/api/books`)
-
-- `GET /` — Lista todos os livros
-- `GET /search?title=...` — Busca livros por título
-- `GET /:page/:limit` — Paginação de livros
-
-#### Gerenciamento de Livros (`/api/books`)
-- `POST /add` — Adiciona livro (admin)
-- `POST /remove/:id` — Remove livro (admin)
-- `POST /update/:id` — Atualiza livro (admin)
-
-### Empréstimos (`/api/lending`)
-
-- `POST /add` — Cria empréstimo (admin)
-- `POST /remove/:id` — Devolve empréstimo (admin)
-- `POST /extend/:id` — Estende empréstimo (admin)
-
-#### Consulta de Empréstimos (`/api/lending`)
-- `GET /:page/:limit` — Lista empréstimos paginados (admin)
-- `GET /search?query=...` — Busca empréstimos (admin)
-- `GET /user/:userId` — Lista todos os livros emprestados de um usuário específico (admin)
-- `GET /my-history` — Retorna o histórico de empréstimos do usuário logado (aluno/professor)
-
-### Usuários (`/api/users`)
-
-- `GET /:page/:limit` — Lista usuários paginados (admin)
-- `GET /search?query=...` — Busca usuários (admin)
-- `GET /:id` — Busca usuário por ID (admin)
-
-#### Gerenciamento de Usuários (`/api/users`)
-- `POST /add` — Adiciona usuário (admin)
-- `POST /remove/:id` — Remove usuário (admin)
-- `POST /update/:id` — Atualiza usuário (admin)
-
-### Status (`/api/status`)
-
-- `GET /ping` — Verifica status da API
-
-## Scripts Disponíveis
-
-- `npm start` — Servidor em produção
-- `npm run dev` — Desenvolvimento com nodemon
-
-## API Routes Documentation
-
-### Books Routes (`/api/books`)
-
-#### POST Routes
-- `POST /api/books/add` - Adicionar novo livro
-  - **Body:** `{ title, author, editor, isbn }`
-  - **Response:** `201` - Livro criado com sucesso
-
-- `POST /api/books/remove/:id` - Remover livro
-  - **Params:** `id` (ID do livro)
-  - **Response:** `200` - Livro removido com sucesso
-
-- `POST /api/books/update/:id` - Atualizar livro
-  - **Params:** `id` (ID do livro)
-  - **Body:** `{ title, author, editor, isbn }`
-  - **Response:** `200` - Livro atualizado com sucesso
-
-#### GET Routes
-- `GET /api/books/` - Listar todos os livros
-  - **Response:** `200` - Array de livros
-
-- `GET /api/books/search?title=<query>` - Buscar livros por título
-  - **Query:** `title` (termo de busca)
-  - **Response:** `200` - Array de livros encontrados
-
-- `GET /api/books/:page/:limit` - Listar livros com paginação
-  - **Params:** `page` (número da página), `limit` (limite por página)
-  - **Response:** `200` - Array de livros paginados
-
-### Users Routes (`/api/users`)
-
-#### POST Routes
-- `POST /api/users/add` - Adicionar novo usuário
-  - **Body:** `{ username, fullName, email, password, type }`
-  - **Response:** `201` - Usuário criado com sucesso
-
-- `POST /api/users/remove/:id` - Remover usuário
-  - **Params:** `id` (ID do usuário)
-  - **Response:** `200` - Usuário removido com sucesso
-
-- `POST /api/users/update/:id` - Atualizar usuário
-  - **Params:** `id` (ID do usuário)
-  - **Body:** `{ username, fullName, email, password, type }`
-  - **Response:** `200` - Usuário atualizado com sucesso
-
-#### GET Routes
-- `GET /api/users/:page/:limit` - Listar usuários com paginação
-  - **Params:** `page` (número da página), `limit` (limite por página)
-  - **Response:** `200` - Objeto com usuários, total, página atual e última página
-
-- `GET /api/users/search?query=<term>` - Buscar usuários por nome ou email
-  - **Query:** `query` (termo de busca)
-  - **Response:** `200` - Array de usuários encontrados
-
-- `GET /api/users/:id` - Buscar usuário por ID
-  - **Params:** `id` (ID do usuário)
-  - **Response:** `200` - Dados do usuário | `404` - Usuário não encontrado
-
-### Lending Routes (`/api/lending`)
-
-#### POST Routes
-- `POST /api/lending/add` - Criar novo empréstimo
-  - **Body:** `{ book, user, startDate, endDate }`
-  - **Response:** `201` - Empréstimo criado com sucesso
-
-- `POST /api/lending/remove/:id` - Marcar empréstimo como devolvido
-  - **Params:** `id` (ID do empréstimo)
-  - **Response:** `200` - Empréstimo devolvido com sucesso
-
-- `POST /api/lending/extend/:id` - Estender prazo do empréstimo
-  - **Params:** `id` (ID do empréstimo)
-  - **Body:** `{ newEndDate }`
-  - **Response:** `200` - Empréstimo estendido com sucesso
-
-#### GET Routes
-- `GET /api/lending/:page/:limit` - Listar empréstimos com paginação
-  - **Params:** `page` (número da página), `limit` (limite por página)
-  - **Response:** `200` - Array de empréstimos com dados populados de livros e usuários
-
-- `GET /api/lending/search?query=<term>` - Buscar empréstimos
-  - **Query:** `query` (termo de busca para livro ou usuário)
-  - **Response:** `200` - Array de empréstimos encontrados
-
-### Main Routes
-
-- `GET /` - Página inicial do sistema
-  - **Response:** Renderiza a view `index.ejs`
-
-## Response Formats
-
-### Success Responses
-```json
-{
-  "message": "Operation completed successfully",
-  "data": { /* response data */ }
-}
+# Instale as dependências
+npm install
 ```
 
-### Error Responses
-```json
-{
-  "message": "Error description"
-}
+### 3. Configuração do ambiente
+```bash
+# Copie o arquivo de exemplo
+cp .env.example .env
+
+# Edite o arquivo .env com suas configurações
 ```
 
-### HTTP Status Codes
-- `200` - OK (operação bem-sucedida)
-- `201` - Created (recurso criado com sucesso)
-- `404` - Not Found (recurso não encontrado)
-- `500` - Internal Server Error (erro interno do servidor)
+Exemplo de configuração `.env`:
+```env
+DB_URL=mongodb://localhost:27017/library-manager
+SESSION_SECRET=your_very_secure_secret_here_change_this_in_production
+PORT=3000
+NODE_ENV=development
+```
+
+### 4. Executar o projeto
+```bash
+# Desenvolvimento
+npm run dev
+
+# Produção
+npm start
+```
+
+## 📖 Estrutura do Projeto
+
+```
+library-manager/
+├── models/              # Modelos do MongoDB
+│   ├── Actions.js       # Log de ações
+│   ├── Book.js          # Modelo de livros
+│   ├── Lending.js       # Modelo de empréstimos
+│   └── User.js          # Modelo de usuários
+├── routes/              # Rotas da API
+│   ├── books/           # Rotas de livros
+│   ├── lending/         # Rotas de empréstimos
+│   ├── users/           # Rotas de usuários
+│   ├── actions.js       # Rotas de auditoria
+│   ├── auth.js          # Rotas de autenticação
+│   └── status.js        # Status da API
+├── views/               # Templates EJS
+├── public/              # Arquivos estáticos
+├── modules/             # Módulos utilitários
+└── app.js               # Arquivo principal
+```
+
+## 🔐 Segurança Implementada
+
+- **Rate Limiting:** Proteção contra ataques de força bruta
+- **Helmet:** Headers de segurança HTTP
+- **Sanitização:** Proteção contra injeção NoSQL
+- **Validação:** Validação rigorosa de entrada
+- **Hash de senhas:** bcrypt com salt rounds
+- **Sessões seguras:** Configuração adequada de cookies
+
+## 📚 API Documentation
+
+### Base URL
+Todas as rotas da API estão sob o prefixo `/api/`
+
+### 🔑 Autenticação (`/api/auth`)
+
+| Método | Endpoint | Descrição | Corpo da Requisição |
+|--------|----------|-----------|---------------------|
+| POST   | `/login` | Login do usuário | `{ username, password }` |
+| POST   | `/register` | Criar usuário (admin) | `{ username, fullName, email, password, type }` |
+| POST   | `/exit` | Logout | - |
+| POST   | `/reset-password` | Trocar senha | `{ currentPassword, newPassword }` |
+
+### 📖 Livros (`/api/books`)
+
+| Método | Endpoint | Descrição | Parâmetros |
+|--------|----------|-----------|------------|
+| GET    | `/` | Listar todos os livros | - |
+| GET    | `/search` | Buscar livros | `?title=termo` |
+| GET    | `/:page/:limit` | Paginação | page, limit |
+| POST   | `/add` | Adicionar livro (admin) | `{ title, author, editor, isbn }` |
+| POST   | `/remove/:id` | Remover livro (admin) | id |
+| POST   | `/update/:id` | Atualizar livro (admin) | `{ title, author, editor, isbn }` |
+
+### 👥 Usuários (`/api/users`)
+
+| Método | Endpoint | Descrição | Parâmetros |
+|--------|----------|-----------|------------|
+| GET    | `/:page/:limit` | Listar usuários (admin) | page, limit |
+| GET    | `/search` | Buscar usuários (admin) | `?query=termo` |
+| GET    | `/:id` | Buscar por ID (admin) | id |
+| POST   | `/add` | Adicionar usuário (admin) | `{ username, fullName, email, password, type }` |
+| POST   | `/remove/:id` | Remover usuário (admin) | id |
+| POST   | `/update/:id` | Atualizar usuário (admin) | `{ dados }` |
+
+### 📋 Empréstimos (`/api/lending`)
+
+| Método | Endpoint | Descrição | Parâmetros |
+|--------|----------|-----------|------------|
+| GET    | `/:page/:limit` | Listar empréstimos (admin) | page, limit |
+| GET    | `/search` | Buscar empréstimos (admin) | `?query=termo` |
+| GET    | `/user/:userId` | Empréstimos por usuário (admin) | userId |
+| GET    | `/my-history` | Histórico do usuário logado | - |
+| POST   | `/add` | Criar empréstimo (admin) | `{ book, user, startDate, endDate }` |
+| POST   | `/remove/:id` | Devolver livro (admin) | id |
+| POST   | `/extend/:id` | Estender prazo (admin) | `{ newEndDate }` |
+
+### 📊 Outras Rotas
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET    | `/api/status/ping` | Status da API |
+| GET    | `/api/actions` | Log de ações (admin) |
+
+## 🎨 Páginas Web
+
+| Rota | Descrição | Acesso |
+|------|-----------|--------|
+| `/` | Página inicial | Público |
+| `/login` | Página de login | Público |
+| `/admin` | Dashboard admin | Admin |
+| `/admin/users` | Gerenciar usuários | Admin |
+| `/admin/books` | Gerenciar livros | Admin |
+| `/admin/lending` | Gerenciar empréstimos | Admin |
+| `/admin/audit` | Auditoria | Admin |
+| `/student` | Dashboard estudante | Estudante/Professor |
+
+## 📝 Códigos de Status HTTP
+
+- `200` - Sucesso
+- `201` - Criado com sucesso
+- `400` - Dados inválidos
+- `401` - Não autenticado
+- `403` - Acesso negado
+- `404` - Não encontrado
+- `409` - Conflito (já existe)
+- `500` - Erro interno do servidor
+
+## 🧪 Scripts Disponíveis
+
+```bash
+npm start      # Servidor em produção
+npm run dev    # Desenvolvimento com nodemon
+npm test       # Executar testes (a implementar)
+```
+
+## 🔧 Configurações de Produção
+
+Para deploy em produção:
+
+1. Configure `NODE_ENV=production`
+2. Use uma string de sessão segura
+3. Configure MongoDB Atlas ou instância dedicada
+4. Configure HTTPS
+5. Configure variáveis de ambiente no seu provedor
+
+## 🤝 Contribuição
+
+1. Fork o projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença ISC. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 👤 Autor
+
+- **Joel** - [@joelmohh](https://github.com/joelmohh)
+
+## 🙏 Agradecimentos
+
+- Express.js team
+- MongoDB team
+- Comunidade Node.js
 
 ---
 
-**System is now robust, secure, and production-ready!**
+**Sistema robusto, seguro e pronto para produção!** 🚀
