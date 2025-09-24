@@ -47,6 +47,8 @@ npm install
 cp .env.example .env
 
 # Edite o arquivo .env com suas configurações
+# Para configurar seus usários iniciais (admin e aluno execute)
+node setup-users.js
 ```
 
 Exemplo de configuração `.env`:
@@ -88,134 +90,11 @@ library-manager/
 └── app.js               # Arquivo principal
 ```
 
-## 🔐 Segurança Implementada
-
-- **Rate Limiting:** Proteção contra ataques de força bruta
-- **Helmet:** Headers de segurança HTTP
-- **Sanitização:** Proteção contra injeção NoSQL
-- **Validação:** Validação rigorosa de entrada
-- **Hash de senhas:** bcrypt com salt rounds
-- **Sessões seguras:** Configuração adequada de cookies
-
-## 📚 API Documentation
-
-### Base URL
-Todas as rotas da API estão sob o prefixo `/api/`
-
-### 🔑 Autenticação (`/api/auth`)
-
-| Método | Endpoint | Descrição | Corpo da Requisição |
-|--------|----------|-----------|---------------------|
-| POST   | `/login` | Login do usuário | `{ username, password }` |
-| POST   | `/register` | Criar usuário (admin) | `{ username, fullName, email, password, type }` |
-| POST   | `/exit` | Logout | - |
-| POST   | `/reset-password` | Trocar senha | `{ currentPassword, newPassword }` |
-
-### 📖 Livros (`/api/books`)
-
-| Método | Endpoint | Descrição | Parâmetros |
-|--------|----------|-----------|------------|
-| GET    | `/` | Listar todos os livros | - |
-| GET    | `/search` | Buscar livros | `?title=termo` |
-| GET    | `/:page/:limit` | Paginação | page, limit |
-| POST   | `/add` | Adicionar livro (admin) | `{ title, author, editor, isbn }` |
-| POST   | `/remove/:id` | Remover livro (admin) | id |
-| POST   | `/update/:id` | Atualizar livro (admin) | `{ title, author, editor, isbn }` |
-
-### 👥 Usuários (`/api/users`)
-
-| Método | Endpoint | Descrição | Parâmetros |
-|--------|----------|-----------|------------|
-| GET    | `/:page/:limit` | Listar usuários (admin) | page, limit |
-| GET    | `/search` | Buscar usuários (admin) | `?query=termo` |
-| GET    | `/:id` | Buscar por ID (admin) | id |
-| POST   | `/add` | Adicionar usuário (admin) | `{ username, fullName, email, password, type }` |
-| POST   | `/remove/:id` | Remover usuário (admin) | id |
-| POST   | `/update/:id` | Atualizar usuário (admin) | `{ dados }` |
-
-### 📋 Empréstimos (`/api/lending`)
-
-| Método | Endpoint | Descrição | Parâmetros |
-|--------|----------|-----------|------------|
-| GET    | `/:page/:limit` | Listar empréstimos (admin) | page, limit |
-| GET    | `/search` | Buscar empréstimos (admin) | `?query=termo` |
-| GET    | `/user/:userId` | Empréstimos por usuário (admin) | userId |
-| GET    | `/my-history` | Histórico do usuário logado | - |
-| POST   | `/add` | Criar empréstimo (admin) | `{ book, user, startDate, endDate }` |
-| POST   | `/remove/:id` | Devolver livro (admin) | id |
-| POST   | `/extend/:id` | Estender prazo (admin) | `{ newEndDate }` |
-
-### 📊 Outras Rotas
-
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| GET    | `/api/status/ping` | Status da API |
-| GET    | `/api/actions` | Log de ações (admin) |
-
-## 🎨 Páginas Web
-
-| Rota | Descrição | Acesso |
-|------|-----------|--------|
-| `/` | Página inicial | Público |
-| `/login` | Página de login | Público |
-| `/admin` | Dashboard admin | Admin |
-| `/admin/users` | Gerenciar usuários | Admin |
-| `/admin/books` | Gerenciar livros | Admin |
-| `/admin/lending` | Gerenciar empréstimos | Admin |
-| `/admin/audit` | Auditoria | Admin |
-| `/student` | Dashboard estudante | Estudante/Professor |
-
-## 📝 Códigos de Status HTTP
-
-- `200` - Sucesso
-- `201` - Criado com sucesso
-- `400` - Dados inválidos
-- `401` - Não autenticado
-- `403` - Acesso negado
-- `404` - Não encontrado
-- `409` - Conflito (já existe)
-- `500` - Erro interno do servidor
-
-## 🧪 Scripts Disponíveis
-
-```bash
-npm start      # Servidor em produção
-npm run dev    # Desenvolvimento com nodemon
-npm test       # Executar testes (a implementar)
-```
-
-## 🔧 Configurações de Produção
-
-Para deploy em produção:
-
-1. Configure `NODE_ENV=production`
-2. Use uma string de sessão segura
-3. Configure MongoDB Atlas ou instância dedicada
-4. Configure HTTPS
-5. Configure variáveis de ambiente no seu provedor
-
-## 🤝 Contribuição
-
-1. Fork o projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
 ## 📄 Licença
 
 Este projeto está sob a licença ISC. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 👤 Autor
 
-- **Joel** - [@joelmohh](https://github.com/joelmohh)
+- **Joelmo** - [@joelmohh](https://github.com/joelmohh)
 
-## 🙏 Agradecimentos
-
-- Express.js team
-- MongoDB team
-- Comunidade Node.js
-
----
-
-**Sistema robusto, seguro e pronto para produção!** 🚀

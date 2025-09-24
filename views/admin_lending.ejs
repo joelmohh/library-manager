@@ -151,8 +151,8 @@
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container"></div>
+    <!-- Custom Toast Container -->
+    <div class="custom-toast-container" id="customToastContainer"></div>
 
     <script>
         let currentPage = 1;
@@ -272,16 +272,24 @@
                         <td>${getStatusBadge(item.status, isOverdue)}</td>
                         <td>
                             ${item.status === 'active' ? `
-                                <button class="btn btn-sm btn-outline-success btn-action" onclick="returnBook('${item._id}')" title="Marcar como devolvido">
+                                <button class="btn btn-sm btn-outline-success btn-action btn-return-book" data-lending-id="${item._id}" title="Marcar como devolvido">
                                     <i class="fas fa-check"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-warning btn-action" onclick="extendLending('${item._id}', '${item.endDate}')" title="Estender prazo">
+                                <button class="btn btn-sm btn-outline-warning btn-action btn-extend-lending" data-lending-id="${item._id}" data-end-date="${item.endDate}" title="Estender prazo">
                                     <i class="fas fa-calendar-plus"></i>
                                 </button>
-                            ` : ''}
-                            <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteLending('${item._id}')" title="Remover">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                                <button class="btn btn-sm btn-outline-danger btn-action btn-delete-lending" data-lending-id="${item._id}" title="Remover empréstimo">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            ` : item.status === 'returned' ? `
+                                <span class="text-muted">
+                                    <i class="fas fa-check-circle"></i> Devolvido
+                                </span>
+                            ` : `
+                                <button class="btn btn-sm btn-outline-danger btn-action btn-delete-lending" data-lending-id="${item._id}" title="Remover empréstimo">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            `}
                         </td>
                     </tr>
                 `;
@@ -312,19 +320,19 @@
             
             // Previous button
             if (page > 1) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadLending(${page - 1})">Anterior</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page - 1}">Anterior</a></li>`;
             }
             
             // Page numbers
             for (let i = Math.max(1, page - 2); i <= Math.min(lastPage, page + 2); i++) {
                 paginationHTML += `<li class="page-item ${i === page ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="loadLending(${i})">${i}</a>
+                    <a class="page-link pagination-link" href="#" data-page="${i}">${i}</a>
                 </li>`;
             }
             
             // Next button
             if (page < lastPage) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadLending(${page + 1})">Próximo</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page + 1}">Próximo</a></li>`;
             }
             
             pagination.innerHTML = paginationHTML;
@@ -342,8 +350,11 @@
             try {
                 // Load available books
                 const booksResponse = await fetch('/api/books/');
-                const books = await booksResponse.json();
-                const availableBooks = books.filter(book => book.available);
+                const booksData = await booksResponse.json();
+                
+                // Verificar se a resposta tem o formato correto
+                const books = booksData.success ? booksData.books : (Array.isArray(booksData) ? booksData : []);
+                const availableBooks = books.filter(book => book.quantity > 0);
                 
                 const bookSelect = document.getElementById('bookSelect');
                 bookSelect.innerHTML = '<option value="">Selecione um livro</option>' +
@@ -423,8 +434,24 @@
         }
 
         function extendLending(lendingId, currentEndDate) {
+            console.log('Extending lending:', lendingId, currentEndDate); // Debug
             document.getElementById('extendLendingId').value = lendingId;
-            document.getElementById('newEndDate').value = new Date(currentEndDate).toISOString().split('T')[0];
+            
+            // Verificar se a data é válida
+            let dateValue = '';
+            if (currentEndDate) {
+                const date = new Date(currentEndDate);
+                if (!isNaN(date.getTime())) {
+                    dateValue = date.toISOString().split('T')[0];
+                } else {
+                    // Se a data atual for inválida, usar data de hoje + 7 dias
+                    const futureDate = new Date();
+                    futureDate.setDate(futureDate.getDate() + 7);
+                    dateValue = futureDate.toISOString().split('T')[0];
+                }
+            }
+            
+            document.getElementById('newEndDate').value = dateValue;
             new bootstrap.Modal(document.getElementById('extendModal')).show();
         }
 
@@ -459,7 +486,7 @@
             if (!confirm('Tem certeza que deseja remover este empréstimo? Esta ação não pode ser desfeita.')) return;
             
             try {
-                const response = await fetch(`/api/lending/remove/${lendingId}`, {
+                const response = await fetch(`/api/lending/delete/${lendingId}`, {
                     method: 'POST'
                 });
                 
@@ -482,30 +509,25 @@
             setDefaultDates();
         }
 
-        function showToast(message, type = 'info') {
-            const toastContainer = document.querySelector('.toast-container');
-            const toastId = 'toast-' + Date.now();
-            
-            const toastHTML = `
-                <div class="toast ${type}" role="alert" id="${toastId}">
-                    <div class="toast-header">
-                        <strong class="me-auto">${type === 'success' ? 'Sucesso' : type === 'error' ? 'Erro' : 'Informação'}</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">${message}</div>
-                </div>
-            `;
-            
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-            
-            const toastElement = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
-            toast.show();
-            
-            toastElement.addEventListener('hidden.bs.toast', function() {
-                toastElement.remove();
-            });
-        }
+        // Event Delegation for action buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-return-book')) {
+                const lendingId = e.target.closest('.btn-return-book').dataset.lendingId;
+                returnBook(lendingId);
+            } else if (e.target.closest('.btn-extend-lending')) {
+                const button = e.target.closest('.btn-extend-lending');
+                const lendingId = button.dataset.lendingId;
+                const endDate = button.dataset.endDate;
+                extendLending(lendingId, endDate);
+            } else if (e.target.closest('.btn-delete-lending')) {
+                const lendingId = e.target.closest('.btn-delete-lending').dataset.lendingId;
+                deleteLending(lendingId);
+            } else if (e.target.closest('.pagination-link')) {
+                e.preventDefault();
+                const page = parseInt(e.target.closest('.pagination-link').dataset.page);
+                loadLending(page);
+            }
+        });
     </script>
 
 <%- include('partials/footer') %>

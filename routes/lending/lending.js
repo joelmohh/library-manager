@@ -79,4 +79,36 @@ Router.post('/extend/:id', adminOnly, async (req, res) => {
     }
 });
 
+Router.post('/delete/:id', adminOnly, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const lending = await Lending.findById(id);
+        
+        // Verificar se o empréstimo está ativo antes de permitir exclusão
+        if (lending.status === 'active') {
+            // Se estiver ativo, devolver o livro primeiro
+            const bookDoc = await Book.findById(lending.book);
+            if (bookDoc) {
+                bookDoc.available = true;
+                await bookDoc.save();
+            }
+        }
+        
+        // Remover completamente o empréstimo
+        await Lending.findByIdAndDelete(id);
+        
+        res.status(200).json({ message: 'Empréstimo removido com sucesso' });
+        
+        const actionLog = new Actions({
+            description: `Empréstimo removido permanentemente: ID ${id}`,
+            author: req.session.username,
+            action: 'deleted'
+        });
+        await actionLog.save();
+    } catch (error) {
+        console.error('Erro ao remover empréstimo:', error.message);
+        res.status(500).json({ message: 'Não foi possível remover o empréstimo.' });
+    }
+});
+
 module.exports = Router;

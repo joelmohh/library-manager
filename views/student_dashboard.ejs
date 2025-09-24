@@ -3,109 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard do Estudante - MyLib</title>
+    <title><%= page.title %> - Sistema de Biblioteca</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/student">
-                <i class="fas fa-book"></i> MyLib - Estudante
-            </a>
-            <div class="navbar-nav ms-auto">
-                <span class="navbar-text me-3">
-                    Bem-vindo, <%= user %>!
-                </span>
-                <button class="btn btn-outline-light btn-sm" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i> Sair
-                </button>
-            </div>
-        </div>
-    </nav>
+    <%- include('partials/navbar') %>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        <!-- Toasts serão inseridos aqui dinamicamente -->
+    </div>
 
+    <!-- Student Dashboard Content -->
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <nav class="col-md-3 col-lg-2 d-md-block bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="/student">
-                                <i class="fas fa-tachometer-alt"></i> Dashboard
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="loadBooks()">
-                                <i class="fas fa-search"></i> Pesquisar Livros
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#" onclick="loadMyLendings()">
-                                <i class="fas fa-book-open"></i> Meus Empréstimos
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-
-            <!-- Main content -->
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+            <!-- Main content (sem sidebar) -->
+            <main class="col-12 ms-sm-auto px-md-4">
                 <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                    <h1 class="h2">Dashboard do Estudante</h1>
+                    <h1 class="h2">Dashboard do Aluno</h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadBooks()">
+                                <i class="fas fa-search"></i> Pesquisar Livros
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="viewMyLendings()">
+                                <i class="fas fa-book"></i> Meus Empréstimos
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Cards de estatísticas -->
+                <!-- Stats Cards -->
                 <div class="row mb-4">
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
                             <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                            Livros Emprestados
-                                        </div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="activeLendings">-</div>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Empréstimos Ativos</h6>
+                                        <h3 class="mb-0" id="activeLendings">-</h3>
                                     </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-book-open fa-2x text-gray-300"></i>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-book-open fa-2x"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-success shadow h-100 py-2">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
                             <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                            Livros Devolvidos
-                                        </div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="returnedLendings">-</div>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Livros Devolvidos</h6>
+                                        <h3 class="mb-0" id="returnedLendings">-</h3>
                                     </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-check-circle fa-2x text-gray-300"></i>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-check-circle fa-2x"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-xl-3 col-md-6 mb-4">
-                        <div class="card border-left-info shadow h-100 py-2">
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
                             <div class="card-body">
-                                <div class="row no-gutters align-items-center">
-                                    <div class="col mr-2">
-                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                            Total de Livros
-                                        </div>
-                                        <div class="h5 mb-0 font-weight-bold text-gray-800" id="totalBooks">-</div>
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Total de Livros</h6>
+                                        <h3 class="mb-0" id="totalBooks">-</h3>
                                     </div>
-                                    <div class="col-auto">
-                                        <i class="fas fa-book fa-2x text-gray-300"></i>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-books fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Livros Disponíveis</h6>
+                                        <h3 class="mb-0" id="availableBooks">-</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-book fa-2x"></i>
                                     </div>
                                 </div>
                             </div>
@@ -116,7 +102,7 @@
                 <!-- Conteúdo dinâmico -->
                 <div id="mainContent">
                     <h3>Bem-vindo ao Sistema de Biblioteca!</h3>
-                    <p>Use o menu lateral para navegar pelas funcionalidades disponíveis.</p>
+                    <p>Use os botões acima para navegar pelas funcionalidades disponíveis.</p>
                     
                     <div class="row">
                         <div class="col-md-6">
@@ -125,7 +111,7 @@
                                     <h5>Últimos Empréstimos</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div id="recentLendings">
+                                    <div id="recent-lendings">
                                         <p class="text-muted">Carregando...</p>
                                     </div>
                                 </div>
@@ -138,7 +124,7 @@
                                     <h5>Livros Populares</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div id="popularBooks">
+                                    <div id="popular-books">
                                         <p class="text-muted">Carregando...</p>
                                     </div>
                                 </div>
@@ -152,173 +138,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/toast.js"></script>
-    <script>
-        // Função de logout
-        function logout() {
-            fetch('/api/auth/exit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    window.location.href = '/login';
-                }
-            })
-            .catch(error => {
-                console.error('Erro no logout:', error);
-                window.location.href = '/login';
-            });
-        }
-
-        // Carregar estatísticas do dashboard
-        function loadDashboardStats() {
-            // Carregar estatísticas de empréstimos do usuário
-            fetch('/api/lending')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.lendings) {
-                        const active = data.lendings.filter(l => l.status === 'active').length;
-                        const returned = data.lendings.filter(l => l.status === 'returned').length;
-                        
-                        document.getElementById('activeLendings').textContent = active;
-                        document.getElementById('returnedLendings').textContent = returned;
-                    }
-                })
-                .catch(error => console.error('Erro ao carregar empréstimos:', error));
-
-            // Carregar total de livros
-            fetch('/api/books')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.books) {
-                        document.getElementById('totalBooks').textContent = data.books.length;
-                    }
-                })
-                .catch(error => console.error('Erro ao carregar livros:', error));
-        }
-
-        // Carregar livros para pesquisa
-        function loadBooks() {
-            document.getElementById('mainContent').innerHTML = `
-                <h3>Pesquisar Livros</h3>
-                <div class="mb-3">
-                    <input type="text" class="form-control" id="searchInput" placeholder="Digite o título, autor ou ISBN...">
-                </div>
-                <div id="booksResults">
-                    <p class="text-muted">Digite algo para pesquisar...</p>
-                </div>
-            `;
-
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                const query = e.target.value;
-                if (query.length > 2) {
-                    searchBooks(query);
-                }
-            });
-        }
-
-        // Pesquisar livros
-        function searchBooks(query) {
-            fetch(`/api/books?search=${encodeURIComponent(query)}`)
-                .then(response => response.json())
-                .then(data => {
-                    const resultsDiv = document.getElementById('booksResults');
-                    if (data.books && data.books.length > 0) {
-                        let html = '<div class="row">';
-                        data.books.forEach(book => {
-                            html += `
-                                <div class="col-md-4 mb-3">
-                                    <div class="card">
-                                        <div class="card-body">
-                                            <h6 class="card-title">${book.title}</h6>
-                                            <p class="card-text">
-                                                <small class="text-muted">Por: ${book.author}</small><br>
-                                                <small class="text-muted">Editora: ${book.editor}</small><br>
-                                                <span class="badge ${book.available ? 'bg-success' : 'bg-danger'}">
-                                                    ${book.available ? 'Disponível' : 'Indisponível'}
-                                                </span>
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        html += '</div>';
-                        resultsDiv.innerHTML = html;
-                    } else {
-                        resultsDiv.innerHTML = '<p class="text-muted">Nenhum livro encontrado.</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro na pesquisa:', error);
-                    document.getElementById('booksResults').innerHTML = '<p class="text-danger">Erro ao pesquisar livros.</p>';
-                });
-        }
-
-        // Carregar empréstimos do usuário
-        function loadMyLendings() {
-            document.getElementById('mainContent').innerHTML = `
-                <h3>Meus Empréstimos</h3>
-                <div id="lendingsTable">
-                    <p class="text-muted">Carregando...</p>
-                </div>
-            `;
-
-            fetch('/api/lending')
-                .then(response => response.json())
-                .then(data => {
-                    const tableDiv = document.getElementById('lendingsTable');
-                    if (data.lendings && data.lendings.length > 0) {
-                        let html = `
-                            <div class="table-responsive">
-                                <table class="table table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>Livro</th>
-                                            <th>Data de Empréstimo</th>
-                                            <th>Data de Devolução</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                        `;
-                        
-                        data.lendings.forEach(lending => {
-                            const startDate = new Date(lending.startDate).toLocaleDateString();
-                            const endDate = new Date(lending.endDate).toLocaleDateString();
-                            html += `
-                                <tr>
-                                    <td>${lending.book?.title || 'N/A'}</td>
-                                    <td>${startDate}</td>
-                                    <td>${endDate}</td>
-                                    <td>
-                                        <span class="badge ${lending.status === 'active' ? 'bg-warning' : 'bg-success'}">
-                                            ${lending.status === 'active' ? 'Ativo' : 'Devolvido'}
-                                        </span>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                        
-                        html += '</tbody></table></div>';
-                        tableDiv.innerHTML = html;
-                    } else {
-                        tableDiv.innerHTML = '<p class="text-muted">Você não possui empréstimos.</p>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar empréstimos:', error);
-                    document.getElementById('lendingsTable').innerHTML = '<p class="text-danger">Erro ao carregar empréstimos.</p>';
-                });
-        }
-
-        // Carregar dashboard quando a página carrega
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDashboardStats();
-        });
-    </script>
+    <script src="/js/student.js"></script>
 </body>
 </html>

@@ -1,378 +1,114 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Declare variables before using them
-  const bootstrap = window.bootstrap
-  const showToast =
-    window.showToast ||
-    ((message, type) => {
-      alert(`${type}: ${message}`)
-    })
-
-  const loadUsers = async () => {
-    try {
-      const response = await fetch("/api/users")
-      const users = await response.json()
-      // Implementar exibição dos usuários
-      console.log("Users loaded:", users)
-    } catch (error) {
-      console.error("Erro ao carregar usuários:", error)
-    }
+  // ===== MENU HAMBÚRGUER MOBILE =====
+  const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarToggleDesktop = document.getElementById('sidebarToggleDesktop');
+  const sidebar = document.querySelector('.sidebar');
+  const mainContent = document.querySelector('.main-content');
+  
+  // Criar overlay se não existir
+  let sidebarOverlay = document.querySelector('.sidebar-overlay');
+  if (!sidebarOverlay) {
+    sidebarOverlay = document.createElement('div');
+    sidebarOverlay.className = 'sidebar-overlay';
+    document.body.appendChild(sidebarOverlay);
   }
 
-  const loadBooks = async () => {
-    try {
-      const response = await fetch("/api/books")
-      const books = await response.json()
-      displayBooks(books)
-    } catch (error) {
-      console.error("Erro ao carregar livros:", error)
-    }
+  // Toggle para mobile (header)
+  if (sidebarToggle) {
+    sidebarToggle.addEventListener('click', (e) => {
+      e.preventDefault();
+      sidebar.classList.toggle('show');
+      sidebarOverlay.classList.toggle('show');
+      document.body.classList.toggle('sidebar-open');
+    });
   }
 
-  const loadLendings = async () => {
-    try {
-      const response = await fetch("/api/lending")
-      const lendings = await response.json()
-      console.log("Lendings loaded:", lendings)
-    } catch (error) {
-      console.error("Erro ao carregar empréstimos:", error)
-    }
-  }
-
-  const displayBooks = (books) => {
-    console.log("Books displayed:", books)
-  }
-
-  // User Management Functions
-  window.createUser = async () => {
-    const form = document.getElementById("userForm")
-    const formData = new FormData(form)
-
-    const userData = {
-      username: formData.get("username"),
-      fullName: formData.get("fullName"),
-      email: formData.get("email"),
-      password: formData.get("password"),
-      type: formData.get("type"),
-    }
-
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        showToast(result.message, "success")
-        form.reset()
-        loadUsers()
+  // Toggle para desktop (sidebar)
+  if (sidebarToggleDesktop) {
+    sidebarToggleDesktop.addEventListener('click', (e) => {
+      e.preventDefault();
+      sidebar.classList.toggle('collapsed');
+      mainContent.classList.toggle('expanded');
+      
+      // Trocar ícone
+      const icon = sidebarToggleDesktop.querySelector('i');
+      if (sidebar.classList.contains('collapsed')) {
+        icon.className = 'fas fa-chevron-right';
       } else {
-        showToast(result.message, "error")
+        icon.className = 'fas fa-chevron-left';
       }
-    } catch (error) {
-      console.error("Erro ao criar usuário:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
-    }
+    });
   }
 
-  window.editUser = async (userId) => {
-    try {
-      const response = await fetch(`/api/users/${userId}`)
-      const user = await response.json()
-
-      if (response.ok) {
-        document.getElementById("editUserId").value = user._id
-        document.getElementById("editUsername").value = user.username
-        document.getElementById("editFullName").value = user.fullName
-        document.getElementById("editEmail").value = user.email
-        document.getElementById("editType").value = user.type
-
-        const modal = new bootstrap.Modal(document.getElementById("editUserModal"))
-        modal.show()
+  // ===== FECHAR MENU AO CLICAR FORA =====
+  if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', () => {
+      if (sidebar.classList.contains('show')) {
+        sidebar.classList.remove('show');
+        sidebarOverlay.classList.remove('show');
+        document.body.classList.remove('sidebar-open');
       }
-    } catch (error) {
-      console.error("Erro ao carregar usuário:", error)
-      showToast("Erro ao carregar dados do usuário.", "error")
-    }
+    });
   }
 
-  window.updateUser = async () => {
-    const form = document.getElementById("editUserForm")
-    const formData = new FormData(form)
-    const userId = formData.get("userId")
-
-    const userData = {
-      username: formData.get("username"),
-      fullName: formData.get("fullName"),
-      email: formData.get("email"),
-      type: formData.get("type"),
-    }
-
-    try {
-      const response = await fetch(`/api/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(userData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        showToast(result.message, "success")
-        const modal = bootstrap.Modal.getInstance(document.getElementById("editUserModal"))
-        modal.hide()
-        loadUsers()
-      } else {
-        showToast(result.message, "error")
+  // ===== FECHAR MENU AO CLICAR EM LINK (MOBILE) =====
+  const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('show');
+        sidebarOverlay.classList.remove('show');
+        document.body.classList.remove('sidebar-open');
       }
-    } catch (error) {
-      console.error("Erro ao atualizar usuário:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
-    }
-  }
-
-  window.deleteUser = async (userId) => {
-    if (confirm("Tem certeza que deseja excluir este usuário?")) {
-      try {
-        const response = await fetch(`/api/users/${userId}`, {
-          method: "DELETE",
-        })
-
-        const result = await response.json()
-
-        if (response.ok) {
-          showToast(result.message, "success")
-          loadUsers()
-        } else {
-          showToast(result.message, "error")
-        }
-      } catch (error) {
-        console.error("Erro ao excluir usuário:", error)
-        showToast("Erro de conexão. Tente novamente.", "error")
-      }
-    }
-  }
-
-  // Book Management Functions
-  window.createBook = async () => {
-    const form = document.getElementById("bookForm")
-    const formData = new FormData(form)
-
-    const bookData = {
-      title: formData.get("title"),
-      author: formData.get("author"),
-      isbn: formData.get("isbn"),
-      category: formData.get("category"),
-      quantity: Number.parseInt(formData.get("quantity")),
-      description: formData.get("description"),
-    }
-
-    try {
-      const response = await fetch("/api/books/add", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bookData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        showToast("Livro criado com sucesso", "success")
-        form.reset()
-        loadBooks()
-      } else {
-        showToast(result.message, "error")
-      }
-    } catch (error) {
-      console.error("Erro ao criar livro:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
-    }
-  }
-
-  window.editBook = async (bookId) => {
-    try {
-      const response = await fetch(`/api/books/${bookId}`)
-      const book = await response.json()
-
-      if (response.ok) {
-        document.getElementById("editBookId").value = book._id
-        document.getElementById("editTitle").value = book.title
-        document.getElementById("editAuthor").value = book.author
-        document.getElementById("editIsbn").value = book.isbn
-        document.getElementById("editCategory").value = book.category
-        document.getElementById("editQuantity").value = book.quantity
-        document.getElementById("editDescription").value = book.description
-
-        const modal = new bootstrap.Modal(document.getElementById("editBookModal"))
-        modal.show()
-      }
-    } catch (error) {
-      console.error("Erro ao carregar livro:", error)
-      showToast("Erro ao carregar dados do livro.", "error")
-    }
-  }
-
-  window.updateBook = async () => {
-    const form = document.getElementById("editBookForm")
-    const formData = new FormData(form)
-    const bookId = formData.get("bookId")
-
-    const bookData = {
-      title: formData.get("title"),
-      author: formData.get("author"),
-      isbn: formData.get("isbn"),
-      category: formData.get("category"),
-      quantity: Number.parseInt(formData.get("quantity")),
-      description: formData.get("description"),
-    }
-
-    try {
-      const response = await fetch(`/api/books/update/${bookId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(bookData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        showToast("Livro atualizado com sucesso", "success")
-        const modal = bootstrap.Modal.getInstance(document.getElementById("editBookModal"))
-        modal.hide()
-        loadBooks()
-      } else {
-        showToast(result.message, "error")
-      }
-    } catch (error) {
-      console.error("Erro ao atualizar livro:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
-    }
-  }
-
-  window.deleteBook = async (bookId) => {
-    if (confirm("Tem certeza que deseja excluir este livro?")) {
-      try {
-        const response = await fetch(`/api/books/remove/${bookId}`, {
-          method: "POST",
-        })
-
-        const result = await response.json()
-
-        if (response.ok) {
-          showToast(result.message, "success")
-          loadBooks()
-        } else {
-          showToast(result.message, "error")
-        }
-      } catch (error) {
-        console.error("Erro ao excluir livro:", error)
-        showToast("Erro de conexão. Tente novamente.", "error")
-      }
-    }
-  }
-
-  // Lending Management Functions
-  window.createLending = async () => {
-    const form = document.getElementById("lendingForm")
-    const formData = new FormData(form)
-
-    const lendingData = {
-      userId: formData.get("userId"),
-      bookId: formData.get("bookId"),
-      dueDate: formData.get("dueDate"),
-    }
-
-    try {
-      const response = await fetch("/api/lending", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(lendingData),
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        showToast(result.message, "success")
-        form.reset()
-        loadLendings()
-      } else {
-        showToast(result.message, "error")
-      }
-    } catch (error) {
-      console.error("Erro ao criar empréstimo:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
-    }
-  }
-
-  window.returnBook = async (lendingId) => {
-    try {
-      const response = await fetch(`/api/lending/${lendingId}/return`, {
-        method: "POST",
-      })
-
-      const result = await response.json()
-
-      if (response.ok) {
-        showToast(result.message, "success")
-        loadLendings()
-      } else {
-        showToast(result.message, "error")
-      }
-    } catch (error) {
-      console.error("Erro ao devolver livro:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
-    }
-  }
-
-  // Search functionality
-  window.searchBooks = async () => {
-    const searchTerm = document.getElementById("searchInput").value
-
-    try {
-      const response = await fetch(`/api/books/search?q=${encodeURIComponent(searchTerm)}`)
-      const books = await response.json()
-
-      if (response.ok) {
-        displayBooks(books)
-      } else {
-        showToast("Erro na busca.", "error")
-      }
-    } catch (error) {
-      console.error("Erro na busca:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
-    }
-  }
+    });
+  });
 
   // Logout function
   window.logout = async () => {
     try {
+      console.log("Iniciando logout..."); // Debug
       const response = await fetch("/api/auth/exit", {
         method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        }
       })
 
+      console.log("Response status:", response.status); // Debug
       const result = await response.json()
 
       if (response.ok) {
-        showToast(result.message, "success")
+        if (typeof showToast === 'function') {
+          showToast("Logout realizado com sucesso!", "success");
+        } else {
+          alert("Logout realizado com sucesso!");
+        }
         setTimeout(() => {
-          window.location.href = "/login"
-        }, 1500)
+          window.location.href = "/login";
+        }, 1000);
+      } else {
+        throw new Error(result.message || 'Erro no logout');
       }
     } catch (error) {
-      console.error("Erro no logout:", error)
-      showToast("Erro de conexão. Tente novamente.", "error")
+      console.error("Erro no logout:", error);
+      if (typeof showToast === 'function') {
+        showToast("Erro no logout. Tente novamente.", "error");
+      } else {
+        alert("Erro no logout. Tente novamente.");
+      }
     }
   }
-})
+
+  // Event listener para logout do header
+  const logoutLink = document.getElementById('logoutLink');
+  if (logoutLink) {
+    console.log("Event listener de logout adicionado"); // Debug
+    logoutLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      console.log("Logout link clicado"); // Debug
+      logout();
+    });
+  } else {
+    console.log("Elemento logoutLink não encontrado"); // Debug
+  }
+});

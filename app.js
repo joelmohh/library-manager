@@ -22,7 +22,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
       imgSrc: ["'self'", "data:", "https:"],
       fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://cdn.jsdelivr.net"],
-      connectSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"]
+      connectSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com", "https://www.googleapis.com"]
     }
   }
 }))
@@ -30,7 +30,7 @@ app.use(helmet({
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
+  max: 1000, // máximo 1000 requests por IP (aumentado de 100)
   message: { error: "Muitas tentativas. Tente novamente em 15 minutos." }
 })
 
@@ -195,6 +195,14 @@ app.get("/admin/lending", (req, res) => {
 
 app.get("/admin/audit", (req, res) => {
   res.render("admin_audit", { user: req.session.username, page: { title: "Auditoria" } })
+})
+
+app.get("/admin/settings", (req, res) => {
+  res.render("admin_settings", { user: req.session.username, page: { title: "Configurações" } })
+})
+
+app.get("/student/settings", isLoggedIn, (req, res) => {
+  res.render("student_settings", { user: req.session.username, page: { title: "Configurações" } })
 })
 
 // Middleware de tratamento de erros global

@@ -103,8 +103,13 @@
                         
                         <div class="mb-3">
                             <label for="isbn" class="form-label">ISBN</label>
-                            <input type="text" class="form-control" id="isbn" name="isbn" required>
-                            <div class="form-text">Formato: 9788573264018</div>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="isbn" name="isbn" required placeholder="9788573264018">
+                                <button type="button" class="btn btn-outline-secondary" id="searchByIsbnBtn" title="Buscar informações do livro por ISBN">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                            <div class="form-text">Digite o ISBN e clique em buscar para preencher automaticamente</div>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -120,7 +125,8 @@
     </div>
 
     <!-- Toast Container -->
-    <div class="toast-container"></div>
+    <!-- Custom Toast Container -->
+    <div class="custom-toast-container" id="customToastContainer"></div>
 
     <script>
         let currentPage = 1;
@@ -209,10 +215,10 @@
                     <td><code>${book.isbn}</code></td>
                     <td>${getAvailabilityBadge(book.available)}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary btn-action" onclick="editBook('${book._id}')" title="Editar">
+                        <button class="btn btn-sm btn-outline-primary btn-action btn-edit-book" data-book-id="${book._id}" title="Editar">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteBook('${book._id}')" title="Remover">
+                        <button class="btn btn-sm btn-outline-danger btn-action btn-delete-book" data-book-id="${book._id}" title="Remover">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -237,19 +243,19 @@
             
             // Previous button
             if (page > 1) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadBooks(${page - 1})">Anterior</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page - 1}">Anterior</a></li>`;
             }
             
             // Page numbers
             for (let i = Math.max(1, page - 2); i <= Math.min(lastPage, page + 2); i++) {
                 paginationHTML += `<li class="page-item ${i === page ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="loadBooks(${i})">${i}</a>
+                    <a class="page-link pagination-link" href="#" data-page="${i}">${i}</a>
                 </li>`;
             }
             
             // Next button
             if (page < lastPage) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadBooks(${page + 1})">Próximo</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page + 1}">Próximo</a></li>`;
             }
             
             pagination.innerHTML = paginationHTML;
@@ -303,6 +309,84 @@
             } finally {
                 saveBtn.disabled = false;
                 spinner.classList.add('d-none');
+            }
+        }
+
+        async function searchByIsbn() {
+            const isbnInput = document.getElementById('isbn');
+            const isbn = isbnInput.value.trim().replace(/[-\s]/g, ''); // Remove hífens e espaços
+            
+            if (!isbn || isbn.length < 10) {
+                showToast('Por favor, digite um ISBN válido (10 ou 13 dígitos)', 'warning');
+                return;
+            }
+            
+            const searchBtn = document.getElementById('searchByIsbnBtn');
+            const originalContent = searchBtn.innerHTML;
+            
+            try {
+                // Mostrar loading
+                searchBtn.disabled = true;
+                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                
+                // Buscar na Google Books API - primeira tentativa com ISBN específico
+                let response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+                let data = await response.json();
+                
+                // Se não encontrar, tentar busca alternativa (conforme Stack Overflow)
+                if (!data.items || data.items.length === 0) {
+                    console.log('Tentando busca alternativa por ISBN...');
+                    response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${isbn}+isbn`);
+                    data = await response.json();
+                }
+                
+                if (data.items && data.items.length > 0) {
+                    // Procurar o livro que tenha exatamente o ISBN buscado
+                    let book = data.items[0].volumeInfo;
+                    
+                    // Verificar se algum dos resultados tem o ISBN exato
+                    for (const item of data.items) {
+                        const volumeInfo = item.volumeInfo;
+                        if (volumeInfo.industryIdentifiers) {
+                            const hasIsbn = volumeInfo.industryIdentifiers.some(identifier => 
+                                identifier.identifier && identifier.identifier.replace(/[-\s]/g, '') === isbn
+                            );
+                            if (hasIsbn) {
+                                book = volumeInfo;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    // Preencher campos automaticamente
+                    if (book.title) {
+                        document.getElementById('title').value = book.title;
+                    }
+                    
+                    if (book.authors && book.authors.length > 0) {
+                        document.getElementById('author').value = book.authors.join(', ');
+                    }
+                    
+                    if (book.publisher) {
+                        document.getElementById('editor').value = book.publisher;
+                    }
+                    
+                    // Preencher gênero se disponível
+                    if (book.categories && book.categories.length > 0) {
+                        document.getElementById('genre').value = book.categories[0];
+                    }
+                    
+                    showToast('Informações do livro preenchidas automaticamente!', 'success');
+                } else {
+                    showToast('Nenhuma informação encontrada para este ISBN', 'warning');
+                }
+                
+            } catch (error) {
+                console.error('Erro ao buscar por ISBN:', error);
+                showToast('Erro ao buscar informações do livro. Verifique sua conexão com a internet.', 'error');
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.innerHTML = originalContent;
             }
         }
 
@@ -381,6 +465,23 @@
                 toastElement.remove();
             });
         }
+
+        // Event Delegation for action buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-edit-book')) {
+                const bookId = e.target.closest('.btn-edit-book').dataset.bookId;
+                editBook(bookId);
+            } else if (e.target.closest('.btn-delete-book')) {
+                const bookId = e.target.closest('.btn-delete-book').dataset.bookId;
+                deleteBook(bookId);
+            } else if (e.target.closest('#searchByIsbnBtn')) {
+                searchByIsbn();
+            } else if (e.target.closest('.pagination-link')) {
+                e.preventDefault();
+                const page = parseInt(e.target.closest('.pagination-link').dataset.page);
+                loadBooks(page);
+            }
+        });
     </script>
 
 <%- include('partials/footer') %>

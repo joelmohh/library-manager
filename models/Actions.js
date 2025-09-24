@@ -12,7 +12,7 @@ const actionSchema = new mongoose.Schema({
     action: {
         type: String,
         required: true,
-        enum: ['added', 'removed', 'updated']
+        enum: ['added', 'removed', 'updated', 'deleted']
     },
     date: {
         type: Date,

@@ -127,7 +127,13 @@
                 // Show only first 5 actions
                 actions.slice(0, 5).forEach(action => {
                     const row = document.createElement('tr');
-                    const date = new Date(action.createdAt).toLocaleDateString('pt-BR');
+                    let date = 'Data inválida';
+                    if (action.createdAt) {
+                        const dateObj = new Date(action.createdAt);
+                        if (!isNaN(dateObj.getTime())) {
+                            date = dateObj.toLocaleDateString('pt-BR');
+                        }
+                    }
                     const actionBadge = getActionBadge(action.action);
                     
                     row.innerHTML = `

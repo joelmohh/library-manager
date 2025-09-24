@@ -3,7 +3,27 @@ const express = require('express');
 const Router = express.Router();
 
 const Lending = require('../../models/Lending');
-const { adminOnly } = require('../../modules/verify');
+const { adminOnly, isLoggedIn } = require('../../modules/verify');
+
+// Rota padrão para /api/lending - lista todos os empréstimos com paginação padrão
+Router.get('/', isLoggedIn, async (req, res) => {
+    try {
+        // Se for admin, mostra todos os empréstimos
+        if (req.session.userType === 'admin') {
+            const lendings = await Lending.find().populate('book user').limit(20).sort({ loanDate: -1 });
+            res.status(200).json({ success: true, lendings: lendings });
+        } else {
+            // Se for usuário comum, mostra apenas seus empréstimos
+            const userId = req.session.userId;
+            const lendings = await Lending.find({ user: userId }).populate('book').sort({ loanDate: -1 });
+            res.status(200).json({ success: true, lendings: lendings });
+        }
+    } catch (error) {
+        console.error('Erro ao buscar empréstimos:', error.message);
+        res.status(500).json({ success: false, message: 'Não foi possível buscar os empréstimos.' });
+    }
+});
+
 // Contagem total de empréstimos
 Router.get('/count', adminOnly, async (req, res) => {
     try {
@@ -45,8 +65,6 @@ Router.get('/search', adminOnly, async (req, res) => {
 
 // Buscar todos os livros emprestados de um usuário específico
 
-const { isLoggedIn } = require('../../modules/verify');
-
 // Histórico do próprio usuário (aluno/professor)
 Router.get('/my-history', isLoggedIn, async (req, res) => {
     try {
@@ -68,6 +86,27 @@ Router.get('/user/:userId', adminOnly, async (req, res) => {
     } catch (error) {
         console.error('Erro ao buscar empréstimos do usuário:', error.message);
         res.status(500).json({ message: 'Não foi possível buscar os empréstimos do usuário.' });
+    }
+});
+
+// Buscar empréstimo específico por ID
+Router.get('/:id', adminOnly, async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Validar se o ID é um ObjectId válido
+        if (!id.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(400).json({ message: 'ID inválido' });
+        }
+
+        const lending = await Lending.findById(id).populate('book user');
+        if (!lending) {
+            return res.status(404).json({ message: 'Empréstimo não encontrado' });
+        }
+        res.json(lending);
+    } catch (error) {
+        console.error('Erro ao buscar empréstimo por ID:', error.message);
+        res.status(500).json({ message: 'Não foi possível buscar o empréstimo.' });
     }
 });
 

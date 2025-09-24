@@ -128,8 +128,8 @@
         </div>
     </div>
 
-    <!-- Toast Container -->
-    <div class="toast-container"></div>
+    <!-- Custom Toast Container -->
+    <div class="custom-toast-container" id="customToastContainer"></div>
 
     <script>
         let currentPage = 1;
@@ -211,13 +211,13 @@
                     <td>${getTypeBadge(user.type)}</td>
                     <td>${new Date(user.createdAt || Date.now()).toLocaleDateString('pt-BR')}</td>
                     <td>
-                        <button class="btn btn-sm btn-outline-primary btn-action" onclick="editUser('${user._id}')">
+                        <button class="btn btn-sm btn-outline-primary btn-action btn-edit-user" data-user-id="${user._id}">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-warning btn-action" onclick="resetPassword('${user._id}')">
+                        <button class="btn btn-sm btn-outline-warning btn-action btn-reset-password" data-user-id="${user._id}">
                             <i class="fas fa-key"></i>
                         </button>
-                        <button class="btn btn-sm btn-outline-danger btn-action" onclick="deleteUser('${user._id}')">
+                        <button class="btn btn-sm btn-outline-danger btn-action btn-delete-user" data-user-id="${user._id}">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -245,19 +245,19 @@
             
             // Previous button
             if (page > 1) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${page - 1})">Anterior</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page - 1}">Anterior</a></li>`;
             }
             
             // Page numbers
             for (let i = Math.max(1, page - 2); i <= Math.min(lastPage, page + 2); i++) {
                 paginationHTML += `<li class="page-item ${i === page ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="loadUsers(${i})">${i}</a>
+                    <a class="page-link pagination-link" href="#" data-page="${i}">${i}</a>
                 </li>`;
             }
             
             // Next button
             if (page < lastPage) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadUsers(${page + 1})">Próximo</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page + 1}">Próximo</a></li>`;
             }
             
             pagination.innerHTML = paginationHTML;
@@ -350,9 +350,11 @@
                 });
                 
                 if (response.ok) {
-                    showToast('Senha resetada com sucesso!', 'success');
+                    const result = await response.json();
+                    showResetPasswordToast(result);
                 } else {
-                    showToast('Erro ao resetar senha', 'error');
+                    const error = await response.json();
+                    showToast(error.message || 'Erro ao resetar senha', 'error');
                 }
                 
             } catch (error) {
@@ -391,30 +393,23 @@
             isEditing = false;
         }
 
-        function showToast(message, type = 'info') {
-            const toastContainer = document.querySelector('.toast-container');
-            const toastId = 'toast-' + Date.now();
-            
-            const toastHTML = `
-                <div class="toast ${type}" role="alert" id="${toastId}">
-                    <div class="toast-header">
-                        <strong class="me-auto">${type === 'success' ? 'Sucesso' : type === 'error' ? 'Erro' : 'Informação'}</strong>
-                        <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
-                    </div>
-                    <div class="toast-body">${message}</div>
-                </div>
-            `;
-            
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-            
-            const toastElement = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
-            toast.show();
-            
-            toastElement.addEventListener('hidden.bs.toast', function() {
-                toastElement.remove();
-            });
-        }
+        // Event Delegation for action buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-edit-user')) {
+                const userId = e.target.closest('.btn-edit-user').dataset.userId;
+                editUser(userId);
+            } else if (e.target.closest('.btn-reset-password')) {
+                const userId = e.target.closest('.btn-reset-password').dataset.userId;
+                resetPassword(userId);
+            } else if (e.target.closest('.btn-delete-user')) {
+                const userId = e.target.closest('.btn-delete-user').dataset.userId;
+                deleteUser(userId);
+            } else if (e.target.closest('.pagination-link')) {
+                e.preventDefault();
+                const page = parseInt(e.target.closest('.pagination-link').dataset.page);
+                loadUsers(page);
+            }
+        });
     </script>
 
 <%- include('partials/footer') %>

@@ -10,7 +10,7 @@
             <!-- Search and Filter Bar -->
             <div class="search-filter-bar">
                 <div class="row align-items-center">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="input-group">
                             <input type="text" class="form-control" id="searchInput" placeholder="Buscar por descrição ou autor...">
                             <button class="btn btn-outline-secondary" type="button" id="searchBtn">
@@ -18,22 +18,19 @@
                             </button>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-4">
                         <select class="form-select" id="actionFilter">
                             <option value="">Todas as ações</option>
                             <option value="added">Adicionado</option>
                             <option value="removed">Removido</option>
-                            <option value="edited">Editado</option>
+                            <option value="updated">Atualizado</option>
+                            <option value="deleted">Deletado</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <input type="date" class="form-control" id="dateFilter" title="Filtrar por data">
                     </div>
-                    <div class="col-md-2">
-                        <button class="btn btn-outline-secondary w-100" onclick="clearFilters()">
-                            <i class="fas fa-times me-2"></i>Limpar
-                        </button>
-                    </div>
+                    
                 </div>
             </div>
             
@@ -132,7 +129,7 @@
                 
                 if (currentDate) {
                     actions = actions.filter(action => {
-                        const actionDate = new Date(action.createdAt).toISOString().split('T')[0];
+                        const actionDate = new Date(action.date).toISOString().split('T')[0];
                         return actionDate === currentDate;
                     });
                 }
@@ -160,13 +157,34 @@
             }
             
             tbody.innerHTML = actions.map(action => {
-                const date = new Date(action.createdAt).toLocaleString('pt-BR');
+                // Usar sempre o campo 'date' do modelo Actions
+                const dateValue = action.date;
+                let formattedDate = 'Data inválida';
+                
+                if (dateValue) {
+                    try {
+                        const date = new Date(dateValue);
+                        if (!isNaN(date.getTime())) {
+                            formattedDate = date.toLocaleString('pt-BR', {
+                                year: 'numeric',
+                                month: '2-digit',
+                                day: '2-digit',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Erro ao formatar data:', error);
+                    }
+                }
+                
                 const actionBadge = getActionBadge(action.action);
                 
                 return `
                     <tr>
                         <td>
-                            <small>${date}</small>
+                            <small>${formattedDate}</small>
                         </td>
                         <td>${actionBadge}</td>
                         <td>${action.description}</td>
@@ -182,6 +200,7 @@
             const badges = {
                 'added': '<span class="badge bg-success"><i class="fas fa-plus me-1"></i>Adicionado</span>',
                 'removed': '<span class="badge bg-danger"><i class="fas fa-trash me-1"></i>Removido</span>',
+                'updated': '<span class="badge bg-warning"><i class="fas fa-edit me-1"></i>Atualizado</span>',
                 'edited': '<span class="badge bg-warning"><i class="fas fa-edit me-1"></i>Editado</span>'
             };
             return badges[action] || `<span class="badge bg-secondary">${action}</span>`;
@@ -198,19 +217,19 @@
             
             // Previous button
             if (page > 1) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadAuditLog(${page - 1})">Anterior</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page - 1}">Anterior</a></li>`;
             }
             
             // Page numbers
             for (let i = Math.max(1, page - 2); i <= Math.min(lastPage, page + 2); i++) {
                 paginationHTML += `<li class="page-item ${i === page ? 'active' : ''}">
-                    <a class="page-link" href="#" onclick="loadAuditLog(${i})">${i}</a>
+                    <a class="page-link pagination-link" href="#" data-page="${i}">${i}</a>
                 </li>`;
             }
             
             // Next button
             if (page < lastPage) {
-                paginationHTML += `<li class="page-item"><a class="page-link" href="#" onclick="loadAuditLog(${page + 1})">Próximo</a></li>`;
+                paginationHTML += `<li class="page-item"><a class="page-link pagination-link" href="#" data-page="${page + 1}">Próximo</a></li>`;
             }
             
             pagination.innerHTML = paginationHTML;
@@ -232,7 +251,7 @@
             currentAction = '';
             currentDate = '';
             currentPage = 1;
-            loadAuditLog();
+            loadAuditLog(1); // Recarrega os dados sem filtros
         }
 
         function showToast(message, type = 'info') {
@@ -259,6 +278,17 @@
                 toastElement.remove();
             });
         }
+
+        // Event Delegation for action buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('#clearFiltersBtn')) {
+                clearFilters();
+            } else if (e.target.closest('.pagination-link')) {
+                e.preventDefault();
+                const page = parseInt(e.target.closest('.pagination-link').dataset.page);
+                loadAuditLog(page);
+            }
+        });
     </script>
 
 <%- include('partials/footer') %>
