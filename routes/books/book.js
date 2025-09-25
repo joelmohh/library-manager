@@ -48,7 +48,16 @@ router.post('/add', [
         await actionLog.save();
     } catch (error) {
         console.error('Erro ao adicionar livro:', error);
-        res.status(500).json({ message: 'Erro ao adicionar livro' });
+        
+        // Verificar se é erro de ISBN duplicado
+        if (error.code === 11000 && error.keyPattern && error.keyPattern.isbn) {
+            return res.status(400).json({ 
+                message: 'Este ISBN já está cadastrado no sistema',
+                error: 'duplicate_isbn'
+            });
+        }
+        
+        res.status(500).json({ message: 'Erro interno do servidor ao adicionar livro' });
     }
 });
 

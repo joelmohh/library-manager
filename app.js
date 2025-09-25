@@ -173,7 +173,10 @@ app.get("/login", loginRedirect, (req, res) => {
 
 //Student Routes
 app.get("/student", (req, res) => {
-  res.render("student_dashboard", { user: req.session.username })
+  res.render("student_dashboard", { 
+    user: req.session.username,
+    page: { title: "Dashboard do Aluno" }
+  })
 })
 
 //Admin Routes
@@ -197,8 +200,44 @@ app.get("/admin/audit", (req, res) => {
   res.render("admin_audit", { user: req.session.username, page: { title: "Auditoria" } })
 })
 
-app.get("/admin/settings", (req, res) => {
-  res.render("admin_settings", { user: req.session.username, page: { title: "Configurações" } })
+app.get("/admin/settings", isLoggedIn, async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const user = await User.findById(req.session.userId);
+    
+    if (!user) {
+      console.log('Usuário não encontrado na base de dados');
+      return res.redirect('/login');
+    }
+    
+    const userData = {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      fullName: user.fullName || '',
+      role: user.type || 'user'
+    };
+    
+    res.render("admin_settings", { 
+      user: userData,
+      page: { title: "Configurações" } 
+    });
+  } catch (error) {
+    console.error('Erro ao carregar configurações:', error);
+    // Fallback com dados da sessão
+    const userData = {
+      id: req.session.userId || 'unknown',
+      username: req.session.username || 'Usuario',
+      email: 'usuario@exemplo.com',
+      fullName: req.session.username || 'Usuario',
+      role: req.session.type || 'user'
+    };
+    
+    res.render("admin_settings", { 
+      user: userData,
+      page: { title: "Configurações" } 
+    });
+  }
 })
 
 app.get("/student/settings", isLoggedIn, (req, res) => {

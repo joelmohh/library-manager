@@ -96,7 +96,8 @@
             try {
                 const response = await fetch('/api/books');
                 if (response.ok) {
-                    allBooks = await response.json();
+                    const data = await response.json();
+                    allBooks = data.books || [];
                     filteredBooks = [...allBooks];
                     displayBooks();
                 } else {
