@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= page.title %> - Sistema de Biblioteca</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <%- include('partials/navbar') %>
+    
+    <!-- Student Header -->
+    <header class="bg-primary text-white py-3 mb-4">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h4 mb-0">
+                        <i class="fas fa-graduation-cap me-2"></i>
+                        Dashboard do Aluno
+                    </h1>
+                    <small>Bem-vindo, <%= user %>!</small>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-2"></i>
+                        <%= user %>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/student/settings"><i class="fas fa-cog me-2"></i>Configurações</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logoutLink"><i class="fas fa-sign-out-alt me-2"></i>Sair</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050;">
+        <!-- Toasts serão inseridos aqui dinamicamente -->
+    </div>
+
+    <!-- Student Dashboard Content -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Main content (sem sidebar) -->
+            <main class="col-12 ms-sm-auto px-md-4">
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h2 class="h4">Meus Empréstimos</h2>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="btn-group me-2">
+                            <button type="button" class="btn btn-sm btn-primary" id="showBooksBtn">
+                                <i class="fas fa-search"></i> Buscar Livros
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="refreshLendingsBtn">
+                                <i class="fas fa-sync"></i> Atualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Empréstimos Ativos</h6>
+                                        <h3 class="mb-0" id="activeLendings">-</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-book-open fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Livros Devolvidos</h6>
+                                        <h3 class="mb-0" id="returnedLendings">-</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-check-circle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Total de Livros</h6>
+                                        <h3 class="mb-0" id="totalBooks">-</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-books fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h6 class="card-title">Livros Disponíveis</h6>
+                                        <h3 class="mb-0" id="availableBooks">-</h3>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-book fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Conteúdo principal: Lista de Empréstimos -->
+                <div id="mainContent">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-book me-2"></i>
+                                        Meus Empréstimos Ativos
+                                    </h5>
+                                    <span class="badge bg-primary" id="lendingsCount">0</span>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Livro</th>
+                                                    <th>Autor</th>
+                                                    <th>Data do Empréstimo</th>
+                                                    <th>Data de Devolução</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="lendingsTableBody">
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">
+                                                        <i class="fas fa-spinner fa-spin me-2"></i>
+                                                        Carregando seus empréstimos...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seção de Busca de Livros -->
+                    <div id="booksSearchSection" style="display: none;">
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">
+                                            <i class="fas fa-search me-2"></i>
+                                            Buscar Livros Disponíveis
+                                        </h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-8">
+                                                <input type="text" class="form-control" id="bookSearchInput" placeholder="Digite o título ou autor do livro...">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button class="btn btn-primary w-100" id="searchBooksBtn">
+                                                    <i class="fas fa-search me-2"></i>Buscar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="booksSearchResults">
+                                            <p class="text-muted text-center">Digite algo para buscar livros disponíveis.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/toast.js"></script>
+    <script>
+        // JavaScript específico para o dashboard do estudante
+        let userLendings = [];
+        let allBooks = [];
+
+        // Carregar dados ao iniciar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMyLendings();
+            loadBookStats();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Logout functionality
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+
+            // Refresh lendings button
+            document.getElementById('refreshLendingsBtn').addEventListener('click', function() {
+                loadMyLendings();
+            });
+
+            // Show books section button
+            document.getElementById('showBooksBtn').addEventListener('click', function() {
+                showAllBooks();
+            });
+
+            // Search books button
+            document.getElementById('searchBooksBtn').addEventListener('click', function() {
+                searchBooks();
+            });
+
+            // Search input enter key
+            const searchInput = document.getElementById('bookSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        searchBooks();
+                    }
+                });
+            }
+        }
+
+        // Carregar empréstimos do usuário
+        async function loadMyLendings() {
+            try {
+                const response = await fetch('/api/lending');
+                if (response.ok) {
+                    const data = await response.json();
+                    userLendings = data.lendings || data;
+                    displayLendings();
+                } else {
+                    showToast('Erro ao carregar empréstimos', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar empréstimos:', error);
+                showToast('Erro ao conectar com o servidor', 'error');
+            }
+        }
+
+        // Carregar estatísticas de livros
+        async function loadBookStats() {
+            try {
+                const response = await fetch('/api/books/count');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('totalBooks').textContent = data.total || '0';
+                    document.getElementById('availableBooks').textContent = data.available || '0';
+                } else {
+                    console.error('Erro ao carregar estatísticas de livros');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+            }
+        }
+
+        // Exibir empréstimos na tabela
+        function displayLendings() {
+            const tbody = document.getElementById('lendingsTableBody');
+            const countBadge = document.getElementById('lendingsCount');
+            
+            // Filtrar apenas empréstimos ativos
+            const activeLendings = userLendings.filter(lending => lending.status === 'active');
+            const returnedLendings = userLendings.filter(lending => lending.status === 'returned');
+            
+            // Atualizar cards de estatísticas
+            document.getElementById('activeLendings').textContent = activeLendings.length;
+            document.getElementById('returnedLendings').textContent = returnedLendings.length;
+            
+            if (!userLendings || userLendings.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="fas fa-book-open fa-2x mb-2"></i>
+                            <br>Você não possui empréstimos ativos no momento.
+                        </td>
+                    </tr>
+                `;
+                countBadge.textContent = '0';
+                return;
+            }
+
+            countBadge.textContent = activeLendings.length;
+
+            // Mostrar apenas empréstimos ativos na tabela principal
+            const lendingsToShow = activeLendings.length > 0 ? activeLendings : userLendings;
+
+            tbody.innerHTML = lendingsToShow.map(lending => {
+                const lendingDate = new Date(lending.startDate).toLocaleDateString('pt-BR');
+                const returnDate = new Date(lending.endDate).toLocaleDateString('pt-BR');
+                const isOverdue = new Date() > new Date(lending.endDate) && lending.status === 'active';
+                
+                return `
+                    <tr>
+                        <td>
+                            <strong>${lending.book?.title || 'Título não disponível'}</strong>
+                        </td>
+                        <td>${lending.book?.author || 'Autor não disponível'}</td>
+                        <td>${lendingDate}</td>
+                        <td>${returnDate}</td>
+                        <td>
+                            <span class="badge ${lending.status === 'returned' ? 'bg-secondary' : (isOverdue ? 'bg-danger' : 'bg-success')}">
+                                ${lending.status === 'returned' ? 'Devolvido' : (isOverdue ? 'Atrasado' : 'No Prazo')}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Mostrar seção de busca de livros
+        function showAllBooks() {
+            const searchSection = document.getElementById('booksSearchSection');
+            if (searchSection.style.display === 'none') {
+                searchSection.style.display = 'block';
+                loadAllBooks();
+            } else {
+                searchSection.style.display = 'none';
+            }
+        }
+
+        // Carregar todos os livros disponíveis
+        async function loadAllBooks() {
+            try {
+                const response = await fetch('/api/books');
+                if (response.ok) {
+                    const data = await response.json();
+                    allBooks = data.books || data;
+                    displaySearchMessage('Digite algo para buscar entre ' + allBooks.length + ' livros disponíveis.');
+                } else {
+                    showToast('Erro ao carregar livros', 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar livros:', error);
+                showToast('Erro ao conectar com o servidor', 'error');
+            }
+        }
+
+        // Buscar livros
+        function searchBooks() {
+            const searchTerm = document.getElementById('bookSearchInput').value.toLowerCase().trim();
+            
+            if (searchTerm === '') {
+                displaySearchMessage('Digite algo para buscar livros.');
+                return;
+            }
+
+            const filteredBooks = allBooks.filter(book => 
+                book.title.toLowerCase().includes(searchTerm) ||
+                book.author.toLowerCase().includes(searchTerm)
+            );
+
+            displayBooks(filteredBooks);
+        }
+
+        // Exibir resultados da busca
+        function displayBooks(books) {
+            const resultsDiv = document.getElementById('booksSearchResults');
+            
+            if (books.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-search fa-2x mb-2"></i>
+                        <br>Nenhum livro encontrado para sua busca.
+                    </div>
+                `;
+                return;
+            }
+
+            resultsDiv.innerHTML = `
+                <div class="row">
+                    ${books.slice(0, 10).map(book => `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">${book.title}</h6>
+                                    <p class="card-text text-muted small">
+                                        <strong>Autor:</strong> ${book.author}<br>
+                                        <strong>Editora:</strong> ${book.editor || 'N/A'}
+                                    </p>
+                                    <span class="badge ${book.available ? 'bg-success' : 'bg-danger'}">
+                                        ${book.available ? 'Disponível' : 'Indisponível'}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                ${books.length > 10 ? `<p class="text-muted text-center mt-3">Mostrando os primeiros 10 resultados de ${books.length} encontrados.</p>` : ''}
+            `;
+        }
+
+        // Exibir mensagem de busca
+        function displaySearchMessage(message) {
+            document.getElementById('booksSearchResults').innerHTML = `
+                <p class="text-muted text-center">${message}</p>
+            `;
+        }
+
+        // Logout
+        async function logout() {
+            try {
+                const response = await fetch('/api/auth/exit', { method: 'POST' });
+                if (response.ok) {
+                    showToast('Logout realizado com sucesso!', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    showToast('Erro no logout. Tente novamente.', 'error');
+                }
+            } catch (error) {
+                console.error('Erro no logout:', error);
+                showToast('Erro no logout. Tente novamente.', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

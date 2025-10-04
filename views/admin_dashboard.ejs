@@ -1,0 +1,178 @@
+<%- include('partials/navbar') %>
+
+<body>
+    <%- include('partials/admin_sidebar') %>
+    
+    <div class="dashboard">
+        <%- include('partials/admin_header') %>
+        
+        <div class="container-fluid p-4">
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">Total de Livros</h5>
+                                    <h2 class="mb-0" id="totalBooks">-</h2>
+                                </div>
+                                <i class="fas fa-book fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">Empréstimos</h5>
+                                    <h2 class="mb-0" id="totalLending">-</h2>
+                                </div>
+                                <i class="fas fa-handshake fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 mb-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="card-title mb-0">Usuários</h5>
+                                    <h2 class="mb-0" id="totalUsers">-</h2>
+                                </div>
+                                <i class="fas fa-users fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Audit Preview -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Registro de Auditoria</h5>
+                            <a href="/admin/audit" class="btn btn-outline-primary btn-sm">Ver mais</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Ação</th>
+                                            <th>Descrição</th>
+                                            <th>Autor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="auditPreview">
+                                        <tr>
+                                            <td colspan="4" class="text-center">Carregando...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        // Load dashboard statistics
+        async function loadDashboardStats() {
+            try {
+                // Load books count
+                const booksResponse = await fetch('/api/books/count');
+                const booksData = await booksResponse.json();
+                document.getElementById('totalBooks').textContent = booksData.total || 0;
+                
+                // Load lending count
+                const lendingResponse = await fetch('/api/lending/count');
+                const lendingData = await lendingResponse.json();
+                document.getElementById('totalLending').textContent = lendingData.total || 0;
+                
+                // Load users count
+                const usersResponse = await fetch('/api/users/count');
+                const usersData = await usersResponse.json();
+                document.getElementById('totalUsers').textContent = usersData.total || 0;
+                
+            } catch (error) {
+                console.error('Erro ao carregar estatísticas:', error);
+                showToast('Erro ao carregar estatísticas', 'error');
+            }
+        }
+        
+        // Load audit preview
+        async function loadAuditPreview() {
+            try {
+                const response = await fetch('/api/actions/');
+                const actions = await response.json();
+                
+                const tbody = document.getElementById('auditPreview');
+                tbody.innerHTML = '';
+                
+                if (actions.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="text-center">Nenhuma ação registrada</td></tr>';
+                    return;
+                }
+                //
+                // Mostra as primeiras 5 / 5 mais recentes
+                //
+                actions.slice(0, 5).forEach(action => {
+                    const row = document.createElement('tr');
+                    let date = 'Data inválida';
+                    if (action.date) {
+                        const dateObj = new Date(action.date);
+                        
+                        if (!isNaN(dateObj.getTime())) {
+                            date = dateObj.toLocaleDateString('pt-BR');
+                        }
+                    }
+                    const actionBadge = getActionBadge(action.action);
+                    
+                    row.innerHTML = `
+                        <td>${date}</td>
+                        <td>${actionBadge}</td>
+                        <td>${action.description}</td>
+                        <td>${action.author}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar auditoria:', error);
+                document.getElementById('auditPreview').innerHTML = 
+                    '<tr><td colspan="4" class="text-center text-danger">Erro ao carregar dados</td></tr>';
+            }
+        }
+        
+        function getActionBadge(action) {
+            const badges = {
+                'added': '<span class="badge bg-success">Adicionado</span>',
+                'removed': '<span class="badge bg-danger">Removido</span>',
+                'edited': '<span class="badge bg-warning">Editado</span>'
+            };
+            return badges[action] || `<span class="badge bg-secondary">${action}</span>`;
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardStats();
+            loadAuditPreview();
+        });
+    </script>
+
+    <script src="/js/toast.js"></script>
+
+<%- include('partials/footer') %>

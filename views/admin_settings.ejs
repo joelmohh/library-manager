@@ -1,0 +1,179 @@
+<%- include('partials/navbar') %>
+
+<body>
+    <%- include('partials/admin_sidebar') %>
+    
+    <div class="dashboard">
+        <%- include('partials/admin_header') %>
+        
+        <div class="container-fluid p-4">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-cog me-2"></i>Configurações da Conta
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="settingsForm">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="fullName" class="form-label">Nome Completo</label>
+                                            <input type="text" class="form-control" id="fullName" name="fullName" 
+                                                   value="<%= (typeof user !== 'undefined' && user.fullName) || '' %>" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="username" class="form-label">Nome de Usuário</label>
+                                            <input type="text" class="form-control" id="username" name="username" 
+                                                   value="<%= (typeof user !== 'undefined' && user.username) || '' %>" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">E-mail</label>
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           value="<%= (typeof user !== 'undefined' && user.email) || '' %>" required>
+                                </div>
+                                
+                                <hr>
+                                
+                                <h6 class="mb-3">Alterar Senha</h6>
+                                <p class="text-muted small mb-3">Deixe em branco se não quiser alterar a senha</p>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="currentPassword" class="form-label">Senha Atual</label>
+                                            <input type="password" class="form-control" id="currentPassword" name="currentPassword">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="newPassword" class="form-label">Nova Senha</label>
+                                            <input type="password" class="form-control" id="newPassword" name="newPassword">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirmar Nova Senha</label>
+                                    <input type="password" class="form-control" id="confirmPassword" name="confirmPassword">
+                                </div>
+                                
+                                <div class="d-flex gap-2 mt-4">
+                                    <button type="submit" class="btn btn-primary" id="saveBtn">
+                                        <span class="spinner-border spinner-border-sm d-none me-2"></span>
+                                        <i class="fas fa-save me-2"></i>Salvar Alterações
+                                    </button>
+                                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                                        <i class="fas fa-undo me-2"></i>Cancelar
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="fas fa-info-circle me-2"></i>Informações da Conta
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Tipo de Conta:</strong> <%= (typeof user !== 'undefined' && user.role === 'admin') ? 'Administrador' : 'Usuário' %></p>
+                                    <p><strong>ID do Usuário:</strong> <code><%= (typeof user !== 'undefined' && user.id) || 'N/A' %></code></p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Status:</strong> <span class="badge bg-success">Ativo</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <script src="/js/toast.js"></script>
+    <script>
+        function resetForm() {
+            document.getElementById('settingsForm').reset();
+            // Restaurar valores originais
+            document.getElementById('fullName').value = '<%= (typeof user !== "undefined" && user.fullName) || "" %>';
+            document.getElementById('username').value = '<%= (typeof user !== "undefined" && user.username) || "" %>';
+            document.getElementById('email').value = '<%= (typeof user !== "undefined" && user.email) || "" %>';
+        }
+
+        document.getElementById('settingsForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const saveBtn = document.getElementById('saveBtn');
+            const spinner = saveBtn.querySelector('.spinner-border');
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const currentPassword = document.getElementById('currentPassword').value;
+            
+            if (newPassword && newPassword !== confirmPassword) {
+                showToast('As senhas não coincidem', 'error');
+                return;
+            }
+            
+            if (newPassword && !currentPassword) {
+                showToast('Digite a senha atual para alterar a senha', 'error');
+                return;
+            }
+            
+            if (newPassword && newPassword.length < 6) {
+                showToast('A nova senha deve ter pelo menos 6 caracteres', 'error');
+                return;
+            }
+            
+            saveBtn.disabled = true;
+            spinner.classList.remove('d-none');
+            
+            try {
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData.entries());
+                
+                const response = await fetch('/api/settings/profile', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Perfil atualizado com sucesso!', 'success');
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                } else {
+                    showToast(result.message || 'Erro ao atualizar perfil', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erro:', error);
+                showToast('Erro de conexão. Tente novamente.', 'error');
+            } finally {
+                saveBtn.disabled = false;
+                spinner.classList.add('d-none');
+            }
+        });
+    </script>
+</body>
+
+<%- include('partials/footer') %>
