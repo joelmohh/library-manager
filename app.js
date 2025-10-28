@@ -9,6 +9,19 @@ require("dotenv").config({ debug: false })
 const mongoose = require("mongoose")
 const { isLoggedIn, loginRedirect } = require("./modules/verify")
 
+// Middleware de controle de permissões
+function requireRole(role) {
+  return function (req, res, next) {
+    if (!req.session || !req.session.type) {
+      return res.status(403).render("login", { page: { title: "Login" }, error: "Acesso negado." });
+    }
+    if (req.session.type !== role) {
+      return res.status(403).render("index", { page: { title: "Home" }, error: "Permissão insuficiente." });
+    }
+    next();
+  };
+}
+
 const app = express()
 const PORT = process.env.PORT || 3000
 
@@ -172,27 +185,27 @@ app.get("/student", (req, res) => {
 })
 
 //Admin Routes
-app.get("/admin", (req, res) => {
+app.get("/admin", isLoggedIn, requireRole("admin"), (req, res) => {
   res.render("admin_dashboard", { user: req.session.username, page: { title: "Dashboard Admin" } })
 })
 
-app.get("/admin/users", (req, res) => {
+app.get("/admin/users", isLoggedIn, requireRole("admin"), (req, res) => {
   res.render("admin_users", { user: req.session.username, page: { title: "Gerenciar Usuários" } })
 })
 
-app.get("/admin/books", (req, res) => {
+app.get("/admin/books", isLoggedIn, requireRole("admin"), (req, res) => {
   res.render("admin_books", { user: req.session.username, page: { title: "Gerenciar Livros" } })
 })
 
-app.get("/admin/lending", (req, res) => {
+app.get("/admin/lending", isLoggedIn, requireRole("admin"), (req, res) => {
   res.render("admin_lending", { user: req.session.username, page: { title: "Gerenciar Empréstimos" } })
 })
 
-app.get("/admin/audit", (req, res) => {
+app.get("/admin/audit", isLoggedIn, requireRole("admin"), (req, res) => {
   res.render("admin_audit", { user: req.session.username, page: { title: "Auditoria" } })
 })
 
-app.get("/admin/settings", isLoggedIn, async (req, res) => {
+app.get("/admin/settings", isLoggedIn, requireRole("admin"), async (req, res) => {
   try {
     const User = require('./models/User');
     const user = await User.findById(req.session.userId);
